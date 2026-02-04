@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ebd_postgres_db
+    environment:
+      POSTGRES_DB: ebd_db
+      POSTGRES_USER: ebd_user
+      POSTGRES_PASSWORD: ebd_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - ebd_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ebd_user -d ebd_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ebd_network
+
+volumes:
+  ebd_postgres_data:
+
+networks:
+  ebd_network:
+    driver: bridge

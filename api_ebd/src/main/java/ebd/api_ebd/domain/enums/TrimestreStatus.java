@@ -1,5 +1,7 @@
 package ebd.api_ebd.domain.enums;
 
-public class TrimestreStatus {
+public enum TrimestreStatus {
     // Enum Status de Período
+    Aberto,
+    Fechado
 }

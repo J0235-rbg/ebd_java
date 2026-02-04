@@ -1,5 +1,8 @@
 package ebd.api_ebd.domain.enums;
 
-public class IdadeGrupo {
+public enum IdadeGrupo {
     // Enum Grupo Etário
+    Criancas,
+    Jovens,
+    Adultos
 }
