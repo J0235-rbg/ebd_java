@@ -14,8 +14,15 @@ public class Trim {
     @GeneratedValue
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "id_igreja")
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    @Column(name = "id_igreja", nullable = false)
     private UUID igreja;
 
 

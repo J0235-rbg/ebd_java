@@ -15,25 +15,20 @@ public class AlunoDependente {
 
     private String nome;
 
-    @ManyToOne
-    @JoinColumn(name = "id_responsavel")
-    private AlunoResponsavel alunoResponsavel;
+    @Column(name = "id_responsavel", nullable = false)
+    private UUID alunoResponsavel;
 
-    @ManyToOne
-    @JoinColumn(name = "id_igreja")
-    private Igreja igreja;
+    @Column(name = "id_igreja", nullable = false)
+    private UUID igreja;
 
-    @ManyToOne
-    @JoinColumn(name = "id_setor")
-    private Setor setor;
+    @Column(name = "id_setor", nullable = false)
+    private UUID setor;
 
-    @ManyToOne
-    @JoinColumn(name = "id_congregacao")
-    private Congregacao congregacao;
+    @Column(name = "id_congregacao", nullable = false)
+    private UUID congregacao;
 
-    @ManyToOne
-    @JoinColumn(name = "id_classe")
-    private Classe classe;
+    @Column(name = "id_classe", nullable = false)
+    private UUID classe;
 
     private Integer status;
 
@@ -53,43 +48,43 @@ public class AlunoDependente {
         this.nome = nome;
     }
 
-    public AlunoResponsavel getAlunoResponsavel() {
+    public UUID getAlunoResponsavel() {
         return alunoResponsavel;
     }
 
-    public void setAlunoResponsavel(AlunoResponsavel alunoResponsavel) {
+    public void setAlunoResponsavel(UUID alunoResponsavel) {
         this.alunoResponsavel = alunoResponsavel;
     }
 
-    public Igreja getIgreja() {
+    public UUID getIgreja() {
         return igreja;
     }
 
-    public void setIgreja(Igreja igreja) {
+    public void setIgreja(UUID igreja) {
         this.igreja = igreja;
     }
 
-    public Setor getSetor() {
+    public UUID getSetor() {
         return setor;
     }
 
-    public void setSetor(Setor setor) {
+    public void setSetor(UUID setor) {
         this.setor = setor;
     }
 
-    public Congregacao getCongregacao() {
+    public UUID getCongregacao() {
         return congregacao;
     }
 
-    public void setCongregacao(Congregacao congregacao) {
+    public void setCongregacao(UUID congregacao) {
         this.congregacao = congregacao;
     }
 
-    public Classe getClasse() {
+    public UUID getClasse() {
         return classe;
     }
 
-    public void setClasse(Classe classe) {
+    public void setClasse(UUID classe) {
         this.classe = classe;
     }
 

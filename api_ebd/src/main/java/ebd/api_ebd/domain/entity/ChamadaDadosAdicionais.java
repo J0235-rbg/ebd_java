@@ -14,8 +14,8 @@ public class ChamadaDadosAdicionais {
     @GeneratedValue
     private UUID id;
 
-    @OneToOne
-    private Chamada chamada;
+    @Column(name = "id_chamada", nullable = false, unique = true)
+    private UUID chamada;
 
     private BigDecimal oferta;
     private Integer visitantes;
@@ -26,8 +26,8 @@ public class ChamadaDadosAdicionais {
     private Integer biblias;
     private Integer revistas;
 
-    @ManyToOne
-    private Pessoa responsavel;
+    @Column(name = "id_responsavel")
+    private UUID responsavel;
 
     public UUID getId() {
         return id;
@@ -37,11 +37,11 @@ public class ChamadaDadosAdicionais {
         this.id = id;
     }
 
-    public Chamada getChamada() {
+    public UUID getChamada() {
         return chamada;
     }
 
-    public void setChamada(Chamada chamada) {
+    public void setChamada(UUID chamada) {
         this.chamada = chamada;
     }
 
@@ -109,11 +109,11 @@ public class ChamadaDadosAdicionais {
         this.revistas = revistas;
     }
 
-    public Pessoa getResponsavel() {
+    public UUID getResponsavel() {
         return responsavel;
     }
 
-    public void setResponsavel(Pessoa responsavel) {
+    public void setResponsavel(UUID responsavel) {
         this.responsavel = responsavel;
     }
     

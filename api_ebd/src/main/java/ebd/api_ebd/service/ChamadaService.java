@@ -19,15 +19,18 @@ import jakarta.transaction.Transactional;
 public class ChamadaService {
     // Serviço de Atendimento
 
+    private final RegistroChamadaService registroChamadaService;
     private final ChamadaRepository chamadaRepository;
     private final TrimestreRepository trimestreRepository;
     private final ClasseRepository classeRepository;
 
     public ChamadaService(
+        RegistroChamadaService registroChamadaService,
         ChamadaRepository chamadaRepository,
         TrimestreRepository trimestreRepository,
         ClasseRepository classeRepository
     ){
+        this.registroChamadaService = registroChamadaService;
         this.chamadaRepository = chamadaRepository;
         this.trimestreRepository = trimestreRepository;
         this.classeRepository = classeRepository;
@@ -84,5 +87,16 @@ public class ChamadaService {
                 chamadaRepository.exitsByClasseIdAndDataAndTrimId(classeId, data, t.getId())
                 
             ).isPresent();
+    }
+
+    @Transactional
+    public void fecharChamada(UUID chamadaId, UUID responsavelId){
+        registroChamadaService.consolidarDados(chamadaId, responsavelId);
+
+        Chamada chamada = chamadaRepository.findById(chamadaId)
+            .orElseThrow();
+
+        chamada.setStatus(ChamadaStatus.Fechado);
+        chamadaRepository.save(chamada);
     }
 }

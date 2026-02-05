@@ -15,13 +15,11 @@ public class Congregacao {
 
     private String nome;
 
-    @ManyToOne
-    @JoinColumn(name = "id_setor")
-    private Setor setor;
+    @Column(name = "id_setor", nullable = false)
+    private UUID setor;
 
-    @ManyToOne
-    @JoinColumn(name = "id_igreja")
-    private Igreja igreja;
+    @Column(name = "id_igreja", nullable = false)
+    private UUID igreja;
 
     public UUID getId() {
         return id;
@@ -39,19 +37,19 @@ public class Congregacao {
         this.nome = nome;
     }
 
-    public Setor getSetor() {
+    public UUID getSetor() {
         return setor;
     }
 
-    public void setSetor(Setor setor) {
+    public void setSetor(UUID setor) {
         this.setor = setor;
     }
 
-    public Igreja getIgreja() {
+    public UUID getIgreja() {
         return igreja;
     }
 
-    public void setIgreja(Igreja igreja) {
+    public void setIgreja(UUID igreja) {
         this.igreja = igreja;
     }
 }

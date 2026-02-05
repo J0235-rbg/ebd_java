@@ -31,15 +31,14 @@ public class Setor {
         this.nome = nome;
     }
 
-    @ManyToOne
-    @JoinColumn(name = "id_igreja")
-    private Igreja idIgreja;
+    @Column(name = "id_igreja", nullable = false)
+    private UUID idIgreja;
 
-    public Igreja getIdIgreja() {
+    public UUID getIdIgreja() {
         return idIgreja;
     }
 
-    public void setIdIgreja(Igreja idIgreja) {
+    public void setIdIgreja(UUID idIgreja) {
         this.idIgreja = idIgreja;
     }
 }

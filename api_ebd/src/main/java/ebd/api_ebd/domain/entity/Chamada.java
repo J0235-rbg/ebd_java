@@ -28,58 +28,58 @@ public class Chamada {
         this.id = id;
     }
 
-    @ManyToOne
-    private Igreja igreja;
+    @Column(name = "id_igreja", nullable = false)
+    private UUID igreja;
 
-    public Igreja getIgreja() {
+    public UUID getIgreja() {
         return igreja;
     }
 
-    public void setIgreja(Igreja igreja) {
+    public void setIgreja(UUID igreja) {
         this.igreja = igreja;
     }
 
-    @ManyToOne
-    private Setor setor;
+    @Column(name = "id_setor", nullable = false)
+    private UUID setor;
 
-    public Setor getSetor() {
+    public UUID getSetor() {
         return setor;
     }
 
-    public void setSetor(Setor setor) {
+    public void setSetor(UUID setor) {
         this.setor = setor;
     }
 
-    @ManyToOne
-    private Congregacao congregacao;
+    @Column(name = "id_congregacao", nullable = false)
+    private UUID congregacao;
 
-    public Congregacao getCongregacao() {
+    public UUID getCongregacao() {
         return congregacao;
     }
 
-    public void setCongregacao(Congregacao congregacao) {
+    public void setCongregacao(UUID congregacao) {
         this.congregacao = congregacao;
     }
 
-    @ManyToOne
-    private Classe classe;
+    @Column(name = "id_classe", nullable = false)
+    private UUID classe;
 
-    public Classe getClasse() {
+    public UUID getClasse() {
         return classe;
     }
 
-    public void setClasse(Classe classe) {
+    public void setClasse(UUID classe) {
         this.classe = classe;
     }
 
-    @ManyToOne
-    private Trim trim;
+    @Column(name = "id_trim", nullable = false)
+    private UUID trim;
 
-    public Trim getTrim() {
+    public UUID getTrim() {
         return trim;
     }
 
-    public void setTrim(Trim trim) {
+    public void setTrim(UUID trim) {
         this.trim = trim;
     }
 
@@ -105,4 +105,17 @@ public class Chamada {
     }
 
     
+    public static Chamada nova(Classe classe, Trim trim, LocalDate data) {
+
+        Chamada c = new Chamada();
+        c.setIgreja(classe.getIgreja());
+        c.setSetor(classe.getSetor());
+        c.setCongregacao(classe.getCongregacao());
+        c.setClasse(classe.getId());
+        c.setTrim(trim.getId());
+        c.setData(data);
+        c.setStatus(ChamadaStatus.Aberto);
+
+        return c;
+    }
 }

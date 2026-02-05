@@ -64,13 +64,11 @@ public class Pessoa {
     public void setBairro(String bairro) {
         this.bairro = bairro;
     }
-    @ManyToOne
-    @JoinColumn(name = "id_cargo")
-    private Cargo cargo;
+    @Column(name = "id_cargo", nullable = false)
+    private UUID cargo;
 
-    @ManyToOne
-    @JoinColumn(name = "id_congregacao")
-    private Congregacao congregacao;
+    @Column(name = "id_congregacao", nullable = false)
+    private UUID congregacao;
 
     private String login;
     private String keyApp;
@@ -79,16 +77,16 @@ public class Pessoa {
     private boolean podeRelatorio;
     private boolean ativo;
 
-    public Cargo getCargo() {
+    public UUID getCargo() {
         return cargo;
     }
-    public void setCargo(Cargo cargo) {
+    public void setCargo(UUID cargo) {
         this.cargo = cargo;
     }
-    public Congregacao getCongregacao() {
+    public UUID getCongregacao() {
         return congregacao;
     }
-    public void setCongregacao(Congregacao congregacao) {
+    public void setCongregacao(UUID congregacao) {
         this.congregacao = congregacao;
     }
     public String getLogin() {

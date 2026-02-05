@@ -32,8 +32,7 @@ public class Classe {
         this.nome = nome;
     }
 
-    @ManyToOne
-    @JoinColumn(name = "id_igreja")
+    @Column(name = "id_igreja", nullable = false)
     private UUID igreja;
 
     public UUID getIgreja() {
@@ -44,8 +43,8 @@ public class Classe {
         this.igreja = igreja;
     }
 
-    @ManyToOne
-    @JoinColumn(name = "id_setor")
+   
+    @Column(name = "id_setor", nullable = false)
     private UUID setor;
 
     public UUID getSetor() {
@@ -56,8 +55,7 @@ public class Classe {
         this.setor = setor;
     }
 
-    @ManyToOne
-    @JoinColumn(name = "id_congregacao")
+    @Column(name = "id_congregacao",nullable = false)
     private UUID congregacao;
 
     public UUID getCongregacao() {
@@ -68,8 +66,7 @@ public class Classe {
         this.congregacao = congregacao;
     }
 
-    @ManyToOne
-    @JoinColumn(name = "id_professor_01")
+    @Column(name = "id_professor_01")
     private UUID professor1;
 
     public UUID getProfessor1() {
@@ -80,8 +77,7 @@ public class Classe {
         this.professor1 = professor1;
     }
 
-    @ManyToOne
-    @JoinColumn(name = "id_professor_02")
+    @Column(name = "id_professor_02")
     private UUID professor2;
 
     public UUID getProfessor2() {
@@ -92,8 +88,7 @@ public class Classe {
         this.professor2 = professor2;
     }
 
-    @ManyToOne
-    @JoinColumn(name = "id_professor_03")
+    @Column(name = "id_professor_03")
     private UUID professor03;
 
     public UUID getProfessor03() {
@@ -106,6 +101,14 @@ public class Classe {
 
     @Enumerated(EnumType.STRING)
     private IdadeGrupo faixIdadeGrupo;
+
+    public IdadeGrupo getFaixIdadeGrupo() {
+        return faixIdadeGrupo;
+    }
+
+    public void setFaixIdadeGrupo(IdadeGrupo faixIdadeGrupo) {
+        this.faixIdadeGrupo = faixIdadeGrupo;
+    }
 
     private boolean ativo;
 
