@@ -17,13 +17,53 @@ public class Igreja {
     @GeneratedValue
     private UUID id;
 
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
     private String nome;
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
     private String endereco;
+
+    public String getEndereco() {
+        return endereco;
+    }
+
+    public void setEndereco(String endereco) {
+        this.endereco = endereco;
+    }
 
     @Column(unique = true, nullable = false)
     private String chaveLogin;
 
+    public String getChaveLogin() {
+        return chaveLogin;
+    }
+
+    public void setChaveLogin(String chaveLogin) {
+        this.chaveLogin = chaveLogin;
+    }
+
     private boolean ativa;
+
+    public boolean isAtiva() {
+        return ativa;
+    }
+
+    public void setAtiva(boolean ativa) {
+        this.ativa = ativa;
+    }
 
 
 }

@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS igreja (
     nome VARCHAR(255) NOT NULL,
     endereco VARCHAR(255),
     chave_login VARCHAR(255) NOT NULL UNIQUE,
-    ativa BOOLEAN
+    ativa BOOLEAN DEFAULT TRUE
 );
 
 -- Tabela Setor
@@ -124,14 +124,14 @@ CREATE TABLE IF NOT EXISTS aluno_dependente (
 -- Tabela Chamada
 CREATE TABLE IF NOT EXISTS chamada (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    igreja_id UUID,
+    id_igreja UUID,
     setor_id UUID,
     congregacao_id UUID,
     classe_id UUID NOT NULL,
     trim_id UUID NOT NULL,
     data DATE NOT NULL,
     status VARCHAR(50),
-    CONSTRAINT fk_chamada_igreja FOREIGN KEY (igreja_id) REFERENCES igreja(id),
+    CONSTRAINT fk_chamada_igreja FOREIGN KEY (id_igreja) REFERENCES igreja(id),
     CONSTRAINT fk_chamada_setor FOREIGN KEY (setor_id) REFERENCES setor(id),
     CONSTRAINT fk_chamada_congregacao FOREIGN KEY (congregacao_id) REFERENCES congregacao(id),
     CONSTRAINT fk_chamada_classe FOREIGN KEY (classe_id) REFERENCES classe(id),
@@ -143,12 +143,12 @@ CREATE TABLE IF NOT EXISTS chamada (
 CREATE TABLE IF NOT EXISTS registro_chamada (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     chamada_id UUID NOT NULL,
-    id_aluno INT,
+    id_aluno UUID NOT NULL,
     biblia INT,
     revista INT,
     status INT,
-    CONSTRAINT fk_registro_chamada_chamada FOREIGN KEY (chamada_id) REFERENCES chamada(id),
-    CONSTRAINT uk_registro_chamada_chamada UNIQUE (chamada_id)
+    CONSTRAINT uq_registro UNIQUE (chamada_id, id_aluno),
+    CONSTRAINT fk_registro_chamada_chamada FOREIGN KEY (chamada_id) REFERENCES chamada(id)
 );
 
 -- Tabela Dados Adicionais Chamada

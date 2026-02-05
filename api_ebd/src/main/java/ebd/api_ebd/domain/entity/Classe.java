@@ -14,34 +14,106 @@ public class Classe {
     @GeneratedValue
     private UUID id;
 
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
     private String nome;
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
 
     @ManyToOne
     @JoinColumn(name = "id_igreja")
-    private Igreja igreja;
+    private UUID igreja;
+
+    public UUID getIgreja() {
+        return igreja;
+    }
+
+    public void setIgreja(UUID igreja) {
+        this.igreja = igreja;
+    }
 
     @ManyToOne
     @JoinColumn(name = "id_setor")
-    private Setor setor;
+    private UUID setor;
+
+    public UUID getSetor() {
+        return setor;
+    }
+
+    public void setSetor(UUID setor) {
+        this.setor = setor;
+    }
 
     @ManyToOne
     @JoinColumn(name = "id_congregacao")
-    private Congregacao congregacao;
+    private UUID congregacao;
+
+    public UUID getCongregacao() {
+        return congregacao;
+    }
+
+    public void setCongregacao(UUID congregacao) {
+        this.congregacao = congregacao;
+    }
 
     @ManyToOne
     @JoinColumn(name = "id_professor_01")
-    private Pessoa professor1;
+    private UUID professor1;
+
+    public UUID getProfessor1() {
+        return professor1;
+    }
+
+    public void setProfessor1(UUID professor1) {
+        this.professor1 = professor1;
+    }
 
     @ManyToOne
     @JoinColumn(name = "id_professor_02")
-    private Pessoa professor2;
+    private UUID professor2;
+
+    public UUID getProfessor2() {
+        return professor2;
+    }
+
+    public void setProfessor2(UUID professor2) {
+        this.professor2 = professor2;
+    }
 
     @ManyToOne
     @JoinColumn(name = "id_professor_03")
-    private Pessoa professor03;
+    private UUID professor03;
+
+    public UUID getProfessor03() {
+        return professor03;
+    }
+
+    public void setProfessor03(UUID professor03) {
+        this.professor03 = professor03;
+    }
 
     @Enumerated(EnumType.STRING)
     private IdadeGrupo faixIdadeGrupo;
 
     private boolean ativo;
+
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
+    }
 }
