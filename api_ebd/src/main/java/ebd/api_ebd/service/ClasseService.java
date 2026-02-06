@@ -1,7 +1,6 @@
 package ebd.api_ebd.service;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
@@ -26,7 +25,7 @@ public class ClasseService {
     }
 
     @Transactional
-    public Classe atualizarClasse(UUID id, Classe dados){
+    public Classe atualizarClasse(Integer id, Classe dados){
         Classe classe = classeRepository.findById(id)
             .orElseThrow(() ->
             new IllegalArgumentException("Classe não encontrada")
@@ -42,29 +41,29 @@ public class ClasseService {
     }
 
     @Transactional
-    public void desativarClasse(UUID id){
+    public void desativarClasse(Integer id){
         Classe classe = classeRepository.findById(id)
             .orElseThrow();
         classe.setAtivo(false);
         classeRepository.save(classe);
     }
 
-    public List<Classe> listarAtivas(UUID igrejaId) {
+    public List<Classe> listarAtivas(Integer igrejaId) {
         return classeRepository.findByIgrejaIdAndAtivoTrue(igrejaId);
     }
 
     public List<Classe> listarPorCongregacaoSetor(
-        UUID igrejaId,
-        UUID congregacaoId,
-        UUID setorId
+        Integer igrejaId,
+        Integer congregacaoId,
+        Integer setorId
     ) {
         return classeRepository
-            .findByIgrejaIdAndCongregacaoIdSetorIdAndAtivoTrue(igrejaId, congregacaoId, setorId);
+            .findByIgrejaIdAndCongregacaoIdAndSetorIdAndAtivoTrue(igrejaId, congregacaoId, setorId);
     }
 
     public List<Classe> listarDoProfessor(
-        UUID igrejaId,
-        UUID pessoaId
+        Integer igrejaId,
+        Integer pessoaId
     ) {
         return classeRepository.findClasseDoProfessor(igrejaId, pessoaId);
     }

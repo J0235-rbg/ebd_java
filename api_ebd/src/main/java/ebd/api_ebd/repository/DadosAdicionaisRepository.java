@@ -1,15 +1,16 @@
 package ebd.api_ebd.repository;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-import ebd.api_ebd.domain.entity.Chamada;
 import ebd.api_ebd.domain.entity.ChamadaDadosAdicionais;
 
-public interface DadosAdicionaisRepository extends JpaRepository<ChamadaDadosAdicionais, UUID> {
+public interface DadosAdicionaisRepository extends JpaRepository<ChamadaDadosAdicionais, Integer> {
 
-    public Optional<ChamadaDadosAdicionais> findByChamada(UUID chamada);
+    @Query("SELECT d FROM ChamadaDadosAdicionais d WHERE d.chamada.id = :chamadaId")
+    Optional<ChamadaDadosAdicionais> findByChamadaId(@Param("chamadaId") Integer chamadaId);
 
 }

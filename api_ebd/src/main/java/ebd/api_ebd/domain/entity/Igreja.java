@@ -1,7 +1,5 @@
 package ebd.api_ebd.domain.entity;
 
-import java.util.UUID;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,14 +12,14 @@ public class Igreja {
     // Entidade Igreja
 
     @Id
-    @GeneratedValue
-    private UUID id;
+    @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
+    private Integer id;
 
-    public UUID getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

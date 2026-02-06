@@ -7,8 +7,6 @@ import ebd.api_ebd.domain.entity.Trim;
 import ebd.api_ebd.dto.CriarTrimestreDTO;
 import ebd.api_ebd.service.TrimestreService;
 
-import java.util.UUID;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,7 +41,7 @@ public class TrimestreController {
     }
     
     @PutMapping("/{id}/fechar")
-    public ResponseEntity<?> fechar(@PathVariable UUID id) {
+    public ResponseEntity<?> fechar(@PathVariable Integer id) {
         
         trimestreService.fecharTrim(id);
         return ResponseEntity.ok().build();

@@ -1,7 +1,5 @@
 package ebd.api_ebd.domain.entity;
 
-import java.util.UUID;
-
 import jakarta.persistence.*;
 
 @Entity
@@ -10,33 +8,33 @@ public class AlunoDependente {
     // Entidade Dependente Estudante
 
     @Id
-    @GeneratedValue
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
     private String nome;
 
     @Column(name = "id_responsavel", nullable = false)
-    private UUID alunoResponsavel;
+    private Integer alunoResponsavel;
 
     @Column(name = "id_igreja", nullable = false)
-    private UUID igreja;
+    private Integer igreja;
 
     @Column(name = "id_setor", nullable = false)
-    private UUID setor;
+    private Integer setor;
 
     @Column(name = "id_congregacao", nullable = false)
-    private UUID congregacao;
+    private Integer congregacao;
 
     @Column(name = "id_classe", nullable = false)
-    private UUID classe;
+    private Integer classe;
 
     private Integer status;
 
-    public UUID getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -48,43 +46,43 @@ public class AlunoDependente {
         this.nome = nome;
     }
 
-    public UUID getAlunoResponsavel() {
+    public Integer getAlunoResponsavel() {
         return alunoResponsavel;
     }
 
-    public void setAlunoResponsavel(UUID alunoResponsavel) {
+    public void setAlunoResponsavel(Integer alunoResponsavel) {
         this.alunoResponsavel = alunoResponsavel;
     }
 
-    public UUID getIgreja() {
+    public Integer getIgreja() {
         return igreja;
     }
 
-    public void setIgreja(UUID igreja) {
+    public void setIgreja(Integer igreja) {
         this.igreja = igreja;
     }
 
-    public UUID getSetor() {
+    public Integer getSetor() {
         return setor;
     }
 
-    public void setSetor(UUID setor) {
+    public void setSetor(Integer setor) {
         this.setor = setor;
     }
 
-    public UUID getCongregacao() {
+    public Integer getCongregacao() {
         return congregacao;
     }
 
-    public void setCongregacao(UUID congregacao) {
+    public void setCongregacao(Integer congregacao) {
         this.congregacao = congregacao;
     }
 
-    public UUID getClasse() {
+    public Integer getClasse() {
         return classe;
     }
 
-    public void setClasse(UUID classe) {
+    public void setClasse(Integer classe) {
         this.classe = classe;
     }
 

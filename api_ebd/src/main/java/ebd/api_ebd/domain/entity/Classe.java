@@ -1,7 +1,5 @@
 package ebd.api_ebd.domain.entity;
 
-import java.util.UUID;
-
 import ebd.api_ebd.domain.enums.IdadeGrupo;
 import jakarta.persistence.*;
 
@@ -11,14 +9,14 @@ public class Classe {
     // Entidade Turma
 
     @Id
-    @GeneratedValue
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    public UUID getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -33,69 +31,69 @@ public class Classe {
     }
 
     @Column(name = "id_igreja", nullable = false)
-    private UUID igreja;
+    private Integer igreja;
 
-    public UUID getIgreja() {
+    public Integer getIgreja() {
         return igreja;
     }
 
-    public void setIgreja(UUID igreja) {
+    public void setIgreja(Integer igreja) {
         this.igreja = igreja;
     }
 
    
     @Column(name = "id_setor", nullable = false)
-    private UUID setor;
+    private Integer setor;
 
-    public UUID getSetor() {
+    public Integer getSetor() {
         return setor;
     }
 
-    public void setSetor(UUID setor) {
+    public void setSetor(Integer setor) {
         this.setor = setor;
     }
 
     @Column(name = "id_congregacao",nullable = false)
-    private UUID congregacao;
+    private Integer congregacao;
 
-    public UUID getCongregacao() {
+    public Integer getCongregacao() {
         return congregacao;
     }
 
-    public void setCongregacao(UUID congregacao) {
+    public void setCongregacao(Integer congregacao) {
         this.congregacao = congregacao;
     }
 
     @Column(name = "id_professor_01")
-    private UUID professor1;
+    private Integer professor1;
 
-    public UUID getProfessor1() {
+    public Integer getProfessor1() {
         return professor1;
     }
 
-    public void setProfessor1(UUID professor1) {
+    public void setProfessor1(Integer professor1) {
         this.professor1 = professor1;
     }
 
     @Column(name = "id_professor_02")
-    private UUID professor2;
+    private Integer professor2;
 
-    public UUID getProfessor2() {
+    public Integer getProfessor2() {
         return professor2;
     }
 
-    public void setProfessor2(UUID professor2) {
+    public void setProfessor2(Integer professor2) {
         this.professor2 = professor2;
     }
 
     @Column(name = "id_professor_03")
-    private UUID professor03;
+    private Integer professor03;
 
-    public UUID getProfessor03() {
+    public Integer getProfessor03() {
         return professor03;
     }
 
-    public void setProfessor03(UUID professor03) {
+    public void setProfessor03(Integer professor03) {
         this.professor03 = professor03;
     }
 

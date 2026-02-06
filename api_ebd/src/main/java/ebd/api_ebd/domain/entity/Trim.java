@@ -1,7 +1,6 @@
 package ebd.api_ebd.domain.entity;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import ebd.api_ebd.domain.enums.TrimestreStatus;
 import jakarta.persistence.*;
@@ -11,19 +10,19 @@ public class Trim {
     // Entidade Período
 
     @Id
-    @GeneratedValue
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    public UUID getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
     @Column(name = "id_igreja", nullable = false)
-    private UUID igreja;
+    private Integer igreja;
 
 
 
@@ -48,11 +47,11 @@ public class Trim {
         this.status = status;
     }
 
-    public UUID getIgreja() {
+    public Integer getIgreja() {
         return igreja;
     }
 
-    public void setIgreja(UUID igrejaId) {
+    public void setIgreja(Integer igrejaId) {
         this.igreja = igrejaId;
     }
 

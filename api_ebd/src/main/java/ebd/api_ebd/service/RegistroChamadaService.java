@@ -1,7 +1,6 @@
 package ebd.api_ebd.service;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
@@ -32,8 +31,8 @@ public class RegistroChamadaService {
 
     @Transactional
     public RegistroChamada registrarOuAtualizar(
-        UUID chamadaId,
-        UUID alunoId,
+        Integer chamadaId,
+        Integer alunoId,
         int status,
         int biblia,
         int revista
@@ -43,18 +42,16 @@ public class RegistroChamadaService {
                 new IllegalStateException("Chamada não encontrada")
             );
 
-        if(!"Aberto".equals(chamada.getStatus())) {
-            throw new IllegalStateException("Chamada não está aberta");
-        }
+        
 
         RegistroChamada registro = registroChamadaRepository
-            .findByChamada_Id(chamadaId).stream()
-            .filter(r -> r.getId_aluno().equals(alunoId))
+            .findByChamadaId(chamadaId).stream()
+            .filter(r -> r.getaluno().equals(alunoId))
             .findFirst()
             .orElseGet(() -> {
                 RegistroChamada novo = new RegistroChamada();
-                novo.setChamada(chamada);
-                novo.setId_aluno(alunoId);
+                novo.setChamada(chamadaId);
+                novo.setaluno(alunoId);
                 return novo;
             });
 
@@ -65,14 +62,14 @@ public class RegistroChamadaService {
         return registroChamadaRepository.save(registro);
     }
 
-    public List<RegistroChamada> listarPorChamada(UUID chamadaId){
-        return registroChamadaRepository.findByChamada_Id(chamadaId);
+    public List<RegistroChamada> listarPorChamada(Integer chamadaId){
+        return registroChamadaRepository.findByChamadaId(chamadaId);
     }
 
     @Transactional
-    public void consolidarDados(UUID chamadaId, UUID responsavelId){
+    public void consolidarDados(Integer chamadaId, Integer responsavelId){
         List<RegistroChamada> registros = 
-            registroChamadaRepository.findByChamada_Id(chamadaId);
+            registroChamadaRepository.findByChamadaId(chamadaId);
 
         int presentes = 0;
         int ausentes = 0;
@@ -90,10 +87,10 @@ public class RegistroChamadaService {
             revistas += r.getRevista();
         }
         ChamadaDadosAdicionais dados = 
-            dadosAdicionaisRepository.findByChamada(chamadaId)
+            dadosAdicionaisRepository.findByChamadaId(chamadaId)
                 .orElseGet(() -> {
                     ChamadaDadosAdicionais d = new ChamadaDadosAdicionais();
-                    d.setChamada(chamadaId);
+                    d.setChamada(chamadaRepository.findById(chamadaId).orElseThrow());
                     return d;
                 });
 

@@ -1,7 +1,5 @@
 package ebd.api_ebd.domain.entity;
 
-import java.util.UUID;
-
 import jakarta.persistence.*;
 
 @Entity
@@ -10,14 +8,14 @@ public class Setor {
     // Entidade Setor
 
     @Id
-    @GeneratedValue
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    public UUID getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -32,13 +30,13 @@ public class Setor {
     }
 
     @Column(name = "id_igreja", nullable = false)
-    private UUID idIgreja;
+    private Integer idIgreja;
 
-    public UUID getIdIgreja() {
+    public Integer getIdIgreja() {
         return idIgreja;
     }
 
-    public void setIdIgreja(UUID idIgreja) {
+    public void setIdIgreja(Integer idIgreja) {
         this.idIgreja = idIgreja;
     }
 }

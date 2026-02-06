@@ -1,7 +1,6 @@
 package ebd.api_ebd.domain.entity;
 
 import java.math.*;
-import java.util.UUID;
 
 import jakarta.persistence.*;
 
@@ -11,11 +10,12 @@ public class ChamadaDadosAdicionais {
     // Entidade Dados Extras de Atendimento
 
     @Id
-    @GeneratedValue
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    @Column(name = "id_chamada", nullable = false, unique = true)
-    private UUID chamada;
+    @ManyToOne
+    @JoinColumn(name = "id_chamada", nullable = false, unique = true)
+    private Chamada chamada;
 
     private BigDecimal oferta;
     private Integer visitantes;
@@ -27,21 +27,21 @@ public class ChamadaDadosAdicionais {
     private Integer revistas;
 
     @Column(name = "id_responsavel")
-    private UUID responsavel;
+    private Integer responsavel;
 
-    public UUID getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
-    public UUID getChamada() {
+    public Chamada getChamada() {
         return chamada;
     }
 
-    public void setChamada(UUID chamada) {
+    public void setChamada(Chamada chamada) {
         this.chamada = chamada;
     }
 
@@ -109,11 +109,11 @@ public class ChamadaDadosAdicionais {
         this.revistas = revistas;
     }
 
-    public UUID getResponsavel() {
+    public Integer getResponsavel() {
         return responsavel;
     }
 
-    public void setResponsavel(UUID responsavel) {
+    public void setResponsavel(Integer responsavel) {
         this.responsavel = responsavel;
     }
     

@@ -3,7 +3,6 @@ package ebd.api_ebd.domain.entity;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
-import java.util.*;
 
 @Entity
 @Table(name = "pessoa")
@@ -11,13 +10,13 @@ public class Pessoa {
     // Entidade Pessoa
 
     @Id
-    @GeneratedValue
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    public UUID getId() {
+    public Integer getId() {
         return id;
     }
-    public void setId(UUID id) {
+    public void setId(Integer id) {
         this.id = id;
     }
     private String nome;
@@ -65,10 +64,10 @@ public class Pessoa {
         this.bairro = bairro;
     }
     @Column(name = "id_cargo", nullable = false)
-    private UUID cargo;
+    private Integer cargo;
 
     @Column(name = "id_congregacao", nullable = false)
-    private UUID congregacao;
+    private Integer congregacao;
 
     private String login;
     private String keyApp;
@@ -77,16 +76,16 @@ public class Pessoa {
     private boolean podeRelatorio;
     private boolean ativo;
 
-    public UUID getCargo() {
+    public Integer getCargo() {
         return cargo;
     }
-    public void setCargo(UUID cargo) {
+    public void setCargo(Integer cargo) {
         this.cargo = cargo;
     }
-    public UUID getCongregacao() {
+    public Integer getCongregacao() {
         return congregacao;
     }
-    public void setCongregacao(UUID congregacao) {
+    public void setCongregacao(Integer congregacao) {
         this.congregacao = congregacao;
     }
     public String getLogin() {

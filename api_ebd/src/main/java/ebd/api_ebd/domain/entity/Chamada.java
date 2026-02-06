@@ -1,7 +1,6 @@
 package ebd.api_ebd.domain.entity;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import ebd.api_ebd.domain.enums.ChamadaStatus;
 import jakarta.persistence.*;
@@ -17,69 +16,69 @@ public class Chamada {
     // Entidade Atendimento
 
     @Id
-    @GeneratedValue
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    public UUID getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
     @Column(name = "id_igreja", nullable = false)
-    private UUID igreja;
+    private Integer igreja;
 
-    public UUID getIgreja() {
+    public Integer getIgreja() {
         return igreja;
     }
 
-    public void setIgreja(UUID igreja) {
+    public void setIgreja(Integer igreja) {
         this.igreja = igreja;
     }
 
     @Column(name = "id_setor", nullable = false)
-    private UUID setor;
+    private Integer setor;
 
-    public UUID getSetor() {
+    public Integer getSetor() {
         return setor;
     }
 
-    public void setSetor(UUID setor) {
+    public void setSetor(Integer setor) {
         this.setor = setor;
     }
 
     @Column(name = "id_congregacao", nullable = false)
-    private UUID congregacao;
+    private Integer congregacao;
 
-    public UUID getCongregacao() {
+    public Integer getCongregacao() {
         return congregacao;
     }
 
-    public void setCongregacao(UUID congregacao) {
+    public void setCongregacao(Integer congregacao) {
         this.congregacao = congregacao;
     }
 
     @Column(name = "id_classe", nullable = false)
-    private UUID classe;
+    private Integer classe;
 
-    public UUID getClasse() {
+    public Integer getClasse() {
         return classe;
     }
 
-    public void setClasse(UUID classe) {
+    public void setClasse(Integer classe) {
         this.classe = classe;
     }
 
     @Column(name = "id_trim", nullable = false)
-    private UUID trim;
+    private Integer trim;
 
-    public UUID getTrim() {
+    public Integer getTrim() {
         return trim;
     }
 
-    public void setTrim(UUID trim) {
+    public void setTrim(Integer trim) {
         this.trim = trim;
     }
 
@@ -105,14 +104,21 @@ public class Chamada {
     }
 
     
-    public static Chamada nova(Classe classe, Trim trim, LocalDate data) {
+    public static Chamada nova(
+        Integer igrejaId,
+        Integer setorId,
+        Integer congregacaoId,
+        Integer classeId,
+        Integer trimId,
+        LocalDate data
+    ) {
 
         Chamada c = new Chamada();
-        c.setIgreja(classe.getIgreja());
-        c.setSetor(classe.getSetor());
-        c.setCongregacao(classe.getCongregacao());
-        c.setClasse(classe.getId());
-        c.setTrim(trim.getId());
+        c.setIgreja(igrejaId);
+        c.setSetor(setorId);
+        c.setCongregacao(congregacaoId);
+        c.setClasse(classeId);
+        c.setTrim(trimId);
         c.setData(data);
         c.setStatus(ChamadaStatus.Aberto);
 

@@ -3,7 +3,6 @@ package ebd.api_ebd.service;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
@@ -34,9 +33,9 @@ public class TrimestreService {
     }
 
     @Transactional
-    public Trim criarTrim(UUID igrejaId, int ano, int trimestre){
+    public Trim criarTrim(Integer igrejaId, int ano, int trimestre){
 
-        if(trimestreRepository.existByIgrejaIdAndStatus(igrejaId, TrimestreStatus.Aberto)){
+        if(trimestreRepository.existsByIgrejaAndStatus(igrejaId, TrimestreStatus.Aberto)){
             throw new IllegalStateException("Já existe um trimestre aberto");
         }
 
@@ -77,14 +76,14 @@ public class TrimestreService {
     }
 
     @Transactional
-    public void gerarChamadas(UUID trimId){
+    public void gerarChamadas(Integer trimId){
         Trim trim = trimestreRepository.findById(trimId)
             .orElseThrow();
         
         List<Classe> classes = 
             classeRepository.findByIgrejaIdAndAtivoTrue(trim.getIgreja());
             
-        List<LocalDate> domingos = (List<LocalDate>) trim.getDataInicio()
+        List<LocalDate> domingos =  trim.getDataInicio()
             .datesUntil(trim.getDataFim().plusDays(1))
             .filter(d -> d.getDayOfWeek() == DayOfWeek.SUNDAY)
             .toList();
@@ -94,13 +93,20 @@ public class TrimestreService {
                     if(data.isBefore(LocalDate.now())) continue;
 
                     boolean existe =
-                        chamadaRepository.exitsByClasseIdAndDataAndTrimId(
+                        chamadaRepository.existsByClasseIdAndDataAndTrimId(
                             classe.getId(), data, trim.getId()
                         );
                     
                     if(!existe){
                         chamadaRepository.save(
-                            Chamada.nova(classe, trim, data)
+                            Chamada.nova(
+                                trim.getIgreja(),
+                                classe.getSetor(),
+                                classe.getCongregacao(),
+                                classe.getId(),
+                                trim.getId(),
+                                data
+                            )
                         );
                     }
                 }
@@ -108,7 +114,7 @@ public class TrimestreService {
     }
 
     @Transactional
-    public void fecharTrim(UUID trimId){
+    public void fecharTrim(Integer trimId){
         Trim trim = trimestreRepository.findById(trimId)
         .orElseThrow();
 

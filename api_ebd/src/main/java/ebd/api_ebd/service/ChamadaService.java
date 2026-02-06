@@ -1,9 +1,10 @@
 package ebd.api_ebd.service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import ebd.api_ebd.domain.entity.Chamada;
@@ -36,15 +37,24 @@ public class ChamadaService {
         this.classeRepository = classeRepository;
     }
 
-    public List<Chamada> buscarChamadasDoDia(UUID igrejaId){
-        return chamadaRepository.findChamadasAbertasDoDia(igrejaId, LocalDate.now());
+    public List<Chamada> buscarChamadasDoDia(Integer igrejaId, Integer trimId){
+
+        LocalDate hoje = LocalDate.now();
+
+        List<Chamada> chamadas = 
+            chamadaRepository
+                .findByIgrejaAndTrimAndDataGreaterThanEqualAndStatusOrderByDataAsc(igrejaId, trimId, hoje, ChamadaStatus.Aberto);
+
+        return chamadas.stream()
+            .filter(c -> c.getData().getDayOfWeek() == DayOfWeek.SUNDAY)
+            .toList();
     }
 
     @Transactional
     public Chamada abrirChamada(
-        UUID classeId,
+        Integer classeId,
         LocalDate data,
-        UUID igrejaId
+        Integer igrejaId
     ){
         Trim trim = trimestreRepository
             .findByIgrejaAndStatus(igrejaId, TrimestreStatus.Aberto)
@@ -53,7 +63,7 @@ public class ChamadaService {
         );
 
         Chamada chamada = chamadaRepository 
-            .findByClasseIdAndDataAndTrimId(classeId, data, trim.getId())
+            .findByClasseAndDataAndTrim(classeId, data, trim.getId())
             .orElseThrow(() -> 
                 new IllegalStateException("Chamada não encontrada")
         );
@@ -67,7 +77,7 @@ public class ChamadaService {
     }
 
     @Transactional
-    public void fecharChamada(UUID chamadaId) {
+    public void fecharChamada(Integer chamadaId) {
         Chamada chamada = chamadaRepository.findById(chamadaId)
             .orElseThrow();
         
@@ -79,18 +89,18 @@ public class ChamadaService {
         chamadaRepository.save(chamada);
     }
 
-    public boolean podeAbrir(UUID classeId, LocalDate data, UUID igrejaId){
+    public boolean podeAbrir(Integer classeId, LocalDate data, Integer igrejaId){
         return trimestreRepository
             .findByIgrejaAndStatus(igrejaId, TrimestreStatus.Aberto)
             .filter( t-> 
                 !data.isAfter(LocalDate.now()) && 
-                chamadaRepository.exitsByClasseIdAndDataAndTrimId(classeId, data, t.getId())
+                chamadaRepository.existsByClasseIdAndDataAndTrimId(classeId, data, t.getId())
                 
             ).isPresent();
     }
 
     @Transactional
-    public void fecharChamada(UUID chamadaId, UUID responsavelId){
+    public void fecharChamada(Integer chamadaId, Integer responsavelId){
         registroChamadaService.consolidarDados(chamadaId, responsavelId);
 
         Chamada chamada = chamadaRepository.findById(chamadaId)

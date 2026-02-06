@@ -3,44 +3,51 @@ package ebd.api_ebd.repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import ebd.api_ebd.domain.entity.Chamada;
+import ebd.api_ebd.domain.enums.ChamadaStatus;
+import ebd.api_ebd.dto.response.ChamadaResponse;
 
-public interface ChamadaRepository extends JpaRepository<Chamada, UUID> {
+public interface ChamadaRepository extends JpaRepository<Chamada, Integer> {
     // Repositório de Atendimento
 
-    boolean exitsByClasseIdAndDataAndTrimId(
-        UUID classeId,
+    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM Chamada c WHERE c.classe = :classeId AND c.data = :data AND c.trim = :trimId")
+    boolean existsByClasseIdAndDataAndTrimId(
+        @org.springframework.data.repository.query.Param("classeId") Integer classeId,
+        @org.springframework.data.repository.query.Param("data") LocalDate data,
+        @org.springframework.data.repository.query.Param("trimId") Integer trimId
+    );
+
+    @Query("SELECT c FROM Chamada c WHERE c.classe = :classeId AND c.data = :data AND c.trim = :trimId")
+    Optional<Chamada> findByClasseAndDataAndTrim(
+        @org.springframework.data.repository.query.Param("classeId") Integer classeId,
+        @org.springframework.data.repository.query.Param("data") LocalDate data,
+        @org.springframework.data.repository.query.Param("trimId") Integer trimId
+    );
+
+    @Query("SELECT c FROM Chamada c WHERE c.classe = :classeId AND c.trim = :trimId ORDER BY c.data")
+    List<Chamada> findByClasseAndTrimOrderByData(
+        @org.springframework.data.repository.query.Param("classeId") Integer classeId,
+        @org.springframework.data.repository.query.Param("trimId") Integer trimId
+    );
+
+    // @Query(
+    //     """
+    //             SELECT c
+    //             FROM Chamada c
+    //             WHERE c.igreja = :igrejaId
+    //             AND c.trim = :trimId
+    //             AND c.data = :data
+    //             AND c.status = 'Aberto'
+    //             """
+    // )
+    List<Chamada> findByIgrejaAndTrimAndDataGreaterThanEqualAndStatusOrderByDataAsc(
+        Integer igreja,
+        Integer trim,
         LocalDate data,
-        UUID trimId
-    );
-
-    Optional<Chamada> findByClasseIdAndDataAndTrimId(
-        UUID classeId,
-        LocalDate data,
-        UUID trimId
-    );
-
-    List<Chamada> findByClasseIdAndTrimIdOrderByData(
-        UUID classeId,
-        UUID trimId
-    );
-
-    @Query(
-        """
-                SELECT c
-                FROM chamada c
-                WHERE c.id_igreja = :igrejaId
-                AND c.data = :data
-                AND c.status = 'Aberta'
-                """
-    )
-    List<Chamada> findChamadasAbertasDoDia(
-        UUID igrejaId,
-        LocalDate data
+        ChamadaStatus status
     );
 }

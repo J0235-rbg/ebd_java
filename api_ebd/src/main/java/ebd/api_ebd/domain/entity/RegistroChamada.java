@@ -1,51 +1,50 @@
 package ebd.api_ebd.domain.entity;
 
-import java.util.UUID;
-
 import jakarta.persistence.*;
 
 @Entity
 @Table(
     name = "registro_chamada",
     uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"id_chamada"})
+        @UniqueConstraint(columnNames = {"id_chamada", "id_aluno"})
     }
 )
 public class RegistroChamada {
     // Entidade Registro de Atendimento
 
     @Id
-    @GeneratedValue
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    public UUID getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
-    @ManyToOne
-    @JoinColumn(name = "id_chamada", nullable = false)
-    private Chamada chamada;
+  
+    @Column(name = "id_chamada", nullable = false)
+    private Integer chamada;
 
-    public Chamada getChamada() {
+    public Integer getChamada() {
         return chamada;
     }
 
-    public void setChamada(Chamada chamada) {
+    public void setChamada(Integer chamada) {
         this.chamada = chamada;
     }
 
-    private UUID id_aluno;
+    @Column(name = "id_aluno", nullable = false)
+    private Integer aluno;
 
-    public UUID getId_aluno() {
-        return id_aluno;
+    public Integer getaluno() {
+        return aluno;
     }
 
-    public void setId_aluno(UUID alunoId) {
-        this.id_aluno = alunoId;
+    public void setaluno(Integer aluno) {
+        this.aluno = aluno;
     }
 
     private Integer biblia;
