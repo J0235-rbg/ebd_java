@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import ebd.api_ebd.domain.entity.Chamada;
 import ebd.api_ebd.domain.entity.RegistroChamada;
+import ebd.api_ebd.dto.response.RegistroChamadaResponse;
 
 public interface RegistroChamadaRepository extends JpaRepository<RegistroChamada, Integer> {
     // Repositório de Registro de Atendimento

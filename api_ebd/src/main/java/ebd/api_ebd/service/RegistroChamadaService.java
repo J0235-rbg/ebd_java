@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import ebd.api_ebd.domain.entity.Chamada;
 import ebd.api_ebd.domain.entity.ChamadaDadosAdicionais;
 import ebd.api_ebd.domain.entity.RegistroChamada;
+import ebd.api_ebd.domain.enums.ChamadaStatus;
 import ebd.api_ebd.repository.ChamadaRepository;
 import ebd.api_ebd.repository.DadosAdicionaisRepository;
 import ebd.api_ebd.repository.RegistroChamadaRepository;
@@ -42,7 +43,9 @@ public class RegistroChamadaService {
                 new IllegalStateException("Chamada não encontrada")
             );
 
-        
+        if(chamada.getStatus() != ChamadaStatus.Aberto){
+            throw new IllegalStateException("Chamada não está aberta");
+        }
 
         RegistroChamada registro = registroChamadaRepository
             .findByChamadaId(chamadaId).stream()
