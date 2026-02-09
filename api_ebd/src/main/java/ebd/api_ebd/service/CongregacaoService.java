@@ -46,4 +46,11 @@ public class CongregacaoService {
         return congregacaoRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Congregação não encontrada"));
     }
+
+    public Congregacao deletar(Integer id){
+        Congregacao c = congregacaoRepository.findById(id)
+            .orElseThrow(() ->  new RuntimeException("Congregação não encontrada"));
+        congregacaoRepository.delete(c);
+        return c;
+    }
 }

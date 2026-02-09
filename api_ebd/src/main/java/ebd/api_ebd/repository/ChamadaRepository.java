@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.Query;
 
 import ebd.api_ebd.domain.entity.Chamada;
 import ebd.api_ebd.domain.enums.ChamadaStatus;
-import ebd.api_ebd.dto.response.ChamadaResponse;
 
 public interface ChamadaRepository extends JpaRepository<Chamada, Integer> {
     // Repositório de Atendimento
@@ -44,6 +43,18 @@ public interface ChamadaRepository extends JpaRepository<Chamada, Integer> {
     //             AND c.status = 'Aberto'
     //             """
     // )
+    @Query("SELECT c FROM Chamada c WHERE c.classe = :classeId ORDER BY c.data")
+    List<Chamada> findByClasse(@org.springframework.data.repository.query.Param("classeId") Integer classeId);
+
+    @Query("SELECT c FROM Chamada c WHERE c.trim = :trimestreId ORDER BY c.data")
+    List<Chamada> findByTrimestre(@org.springframework.data.repository.query.Param("trimestreId") Integer trimestreId);
+
+    @Query("SELECT c FROM Chamada c WHERE c.classe = :classeId AND c.trim = :trimestreId ORDER BY c.data")
+    List<Chamada> findByClasseAndTrimestre(
+        @org.springframework.data.repository.query.Param("classeId") Integer classeId,
+        @org.springframework.data.repository.query.Param("trimestreId") Integer trimestreId
+    );
+
     List<Chamada> findByIgrejaAndTrimAndDataGreaterThanEqualAndStatusOrderByDataAsc(
         Integer igreja,
         Integer trim,

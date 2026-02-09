@@ -4,7 +4,6 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import ebd.api_ebd.domain.entity.Chamada;
@@ -12,7 +11,6 @@ import ebd.api_ebd.domain.entity.Trim;
 import ebd.api_ebd.domain.enums.ChamadaStatus;
 import ebd.api_ebd.domain.enums.TrimestreStatus;
 import ebd.api_ebd.repository.ChamadaRepository;
-import ebd.api_ebd.repository.ClasseRepository;
 import ebd.api_ebd.repository.TrimestreRepository;
 import jakarta.transaction.Transactional;
 
@@ -23,18 +21,15 @@ public class ChamadaService {
     private final RegistroChamadaService registroChamadaService;
     private final ChamadaRepository chamadaRepository;
     private final TrimestreRepository trimestreRepository;
-    private final ClasseRepository classeRepository;
 
     public ChamadaService(
         RegistroChamadaService registroChamadaService,
         ChamadaRepository chamadaRepository,
-        TrimestreRepository trimestreRepository,
-        ClasseRepository classeRepository
+        TrimestreRepository trimestreRepository
     ){
         this.registroChamadaService = registroChamadaService;
         this.chamadaRepository = chamadaRepository;
         this.trimestreRepository = trimestreRepository;
-        this.classeRepository = classeRepository;
     }
 
     public List<Chamada> buscarChamadasDoDia(Integer igrejaId, Integer trimId){

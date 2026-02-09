@@ -15,4 +15,5 @@ public interface CongregacaoRepository extends JpaRepository<Congregacao, Intege
     
     @Query("SELECT c FROM Congregacao c WHERE c.setor = :setorId")
     List<Congregacao> findBySetorId(@Param("setorId") Integer setorId);
+
 }

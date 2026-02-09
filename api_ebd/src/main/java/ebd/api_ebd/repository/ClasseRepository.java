@@ -39,5 +39,7 @@ public interface ClasseRepository extends JpaRepository<Classe, Integer> {
         Integer pessoaId
     );
 
+    @Query("SELECT c FROM Classe c WHERE c.congregacao = :congregacaoId")
+    List<Classe> findByCongregacao(@Param("congregacaoId") Integer congregacaoId);
 
 }

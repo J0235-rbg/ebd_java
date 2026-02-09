@@ -2,6 +2,7 @@ package ebd.api_ebd.controller;
 
 import java.util.List;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -55,5 +56,11 @@ public class CongregacaoController {
     @Operation(summary = "Buscar congregação por ID", description = "Retorna uma congregação específica pelo ID")
     public Congregacao buscarPorId(@PathVariable Integer id) {
         return congregacaoService.buscarPorId(id);
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Desativar classe", description = "Desativa uma classe")
+    public Congregacao deletar(@PathVariable Integer id) {
+        return congregacaoService.deletar(id);
     }
 }

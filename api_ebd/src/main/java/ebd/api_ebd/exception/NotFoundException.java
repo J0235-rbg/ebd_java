@@ -1,5 +1,13 @@
 package ebd.api_ebd.exception;
 
 public class NotFoundException extends RuntimeException {
-    // Exceção Não Encontrado
+    
+    public NotFoundException(String message) {
+        super(message);
+    }
+
+    public NotFoundException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
+
