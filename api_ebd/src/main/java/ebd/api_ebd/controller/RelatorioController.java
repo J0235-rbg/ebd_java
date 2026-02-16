@@ -59,16 +59,18 @@ public class RelatorioController {
     @Operation(summary = "Relatório individual de aluno", description = "Gera relatório completo de um aluno específico")
     public RelatorioAlunoDTO relatorioAluno(
             @PathVariable Integer alunoId,
-            @RequestParam(required = false) Integer trimestreId) {
-        return relatorioAlunoService.gerarRelatorioAluno(alunoId, trimestreId);
+            @RequestParam(required = false) Integer trimestreId,
+            @RequestParam Integer classeId) {
+        return relatorioAlunoService.gerarRelatorioAluno(alunoId, trimestreId, classeId);
     }
 
     @GetMapping("/alunos")
     @Operation(summary = "Relatórios de todos os alunos", description = "Lista relatórios de todos os alunos")
     public List<RelatorioAlunoDTO> listarRelatoriosAlunos(
             @RequestParam(required = false) Integer congregacaoId,
-            @RequestParam(required = false) Integer trimestreId) {
-        return relatorioAlunoService.listarRelatoriosAlunos(congregacaoId, trimestreId);
+            @RequestParam(required = false) Integer trimestreId,
+            @RequestParam Integer classeId) {
+        return relatorioAlunoService.listarRelatoriosAlunos(congregacaoId, trimestreId, classeId);
     }
 
     // ===== RELATÓRIOS DE CLASSES =====

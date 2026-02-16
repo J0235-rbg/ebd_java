@@ -20,6 +20,12 @@ public interface RegistroChamadaRepository extends JpaRepository<RegistroChamada
     @Query("SELECT r FROM RegistroChamada r WHERE r.chamada = :chamadaId")
     List<RegistroChamada> findByChamadaId(@Param("chamadaId") Integer chamadaId);
 
+    @Query("SELECT r FROM RegistroChamada r WHERE r.aluno = :alunoId AND r.chamada IN :chamadas")
+    List<RegistroChamada> findByAlunoAndChamadas(
+        @Param("alunoId") Integer alunoId,
+        @Param("chamadas") List<Integer> chamadas
+    );
+
     @Query("""
             SELECT COUNT(r)
             FROM RegistroChamada r

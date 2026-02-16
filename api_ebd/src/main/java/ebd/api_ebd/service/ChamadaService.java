@@ -2,7 +2,9 @@ package ebd.api_ebd.service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -36,13 +38,23 @@ public class ChamadaService {
 
         LocalDate hoje = LocalDate.now();
 
-        List<Chamada> chamadas = 
+        List<Chamada> todasChamadas = 
             chamadaRepository
                 .findByIgrejaAndTrimAndDataGreaterThanEqualAndStatusOrderByDataAsc(igrejaId, trimId, hoje, ChamadaStatus.Aberto);
+            
+        Optional<LocalDate> primeiraDataDomingo = todasChamadas.stream()
+            .map(Chamada::getData)
+            .filter(data -> data.getDayOfWeek() == DayOfWeek.SUNDAY)
+            .findFirst();
 
-        return chamadas.stream()
-            .filter(c -> c.getData().getDayOfWeek() == DayOfWeek.SUNDAY)
-            .toList();
+        if(primeiraDataDomingo.isPresent()){
+            LocalDate dataAlvo = primeiraDataDomingo.get();
+            return todasChamadas.stream()
+                    .filter(c -> c.getData().equals(dataAlvo))
+                    .toList();
+        }
+
+        return Collections.emptyList();
     }
 
     @Transactional

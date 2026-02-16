@@ -170,27 +170,33 @@ public class RelatorioRankingService {
                     .filter(r -> r.getStatus() == 1)
                     .count();
 
-            int totalFaltas = (int) todosRegistros.stream()
-                    .filter(r -> r.getStatus() == 0)
+                int totalFaltas = (int) todosRegistros.stream()
+                    .filter(r -> r.getStatus() != null && r.getStatus() == 2)
                     .count();
 
-            int totalBiblias = todosRegistros.stream()
-                    .mapToInt(r -> r.getBiblia() != null ? r.getBiblia() : 0)
-                    .sum();
+            // Contar total de alunos matriculados na classe
+            List<AlunoDependente> alunosDependentes = alunoDependenteRepository.findByClasse(classe.getId());
+            List<AlunoResponsavel> alunosResponsaveis = alunoResponsavelRepository.findByClasse(classe.getId());
+            int totalAlunos = alunosDependentes.size() + alunosResponsaveis.size();
 
-            int totalRevistas = todosRegistros.stream()
-                    .mapToInt(r -> r.getRevista() != null ? r.getRevista() : 0)
-                    .sum();
-
+            // Calcular médias por chamada ao invés de somas absolutas
             int totalChamadas = chamadas.size();
             int mediaPresencas = totalChamadas > 0 ? totalPresencas / totalChamadas : 0;
+            
+            int mediaBiblias = totalChamadas > 0 
+                ? todosRegistros.stream().mapToInt(r -> r.getBiblia() != null ? r.getBiblia() : 0).sum() / totalChamadas
+                : 0;
+
+            int mediaRevistas = totalChamadas > 0 
+                ? todosRegistros.stream().mapToInt(r -> r.getRevista() != null ? r.getRevista() : 0).sum() / totalChamadas
+                : 0;
             
             double percentualPresenca = (totalPresencas + totalFaltas) > 0 
                     ? (totalPresencas * 100.0) / (totalPresencas + totalFaltas) 
                     : 0.0;
 
-            // Calcular pontuação: média de presenças + total de bíblias + total de revistas
-            int pontuacao = mediaPresencas + totalBiblias + totalRevistas;
+            // Calcular pontuação: média de presenças + média de bíblias + média de revistas
+            int pontuacao = mediaPresencas + mediaBiblias + mediaRevistas;
 
             Congregacao congregacao = congregacaoRepository.findById(classe.getCongregacao())
                     .orElse(null);
@@ -201,11 +207,12 @@ public class RelatorioRankingService {
             rankingDTO.setNomeClasse(classe.getNome());
             rankingDTO.setCongregacao(congregacao != null ? congregacao.getNome() : "N/A");
             rankingDTO.setPontuacao(pontuacao);
-            rankingDTO.setTotalAlunos(0); // Será implementado quando houver tabela de matrícula
+            rankingDTO.setTotalAlunos(totalAlunos);
             rankingDTO.setMediaPresencas(mediaPresencas);
+            rankingDTO.setTotalAusentes(totalFaltas);
             rankingDTO.setPercentualPresenca(percentualPresenca);
-            rankingDTO.setTotalBiblias(totalBiblias);
-            rankingDTO.setTotalRevistas(totalRevistas);
+            rankingDTO.setTotalBiblias(mediaBiblias);
+            rankingDTO.setTotalRevistas(mediaRevistas);
 
             ranking.add(rankingDTO);
         }

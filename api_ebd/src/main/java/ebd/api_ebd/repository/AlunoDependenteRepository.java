@@ -12,6 +12,9 @@ public interface AlunoDependenteRepository extends JpaRepository<AlunoDependente
     
     @Query("SELECT a FROM AlunoDependente a WHERE a.classe = :classeId")
     List<AlunoDependente> findByClasse(@Param("classeId") Integer classeId);
+
+    @Query("SELECT a FROM AlunoDependente a WHERE a.id = :alunoId AND a.classe = :classeId")
+    AlunoDependente findByIdAndClasse(@Param("alunoId") Integer alunoId, @Param("classeId") Integer classeId);
     
     @Query("SELECT a FROM AlunoDependente a WHERE a.congregacao = :congregacaoId")
     List<AlunoDependente> findByCongregacao(@Param("congregacaoId") Integer congregacaoId);

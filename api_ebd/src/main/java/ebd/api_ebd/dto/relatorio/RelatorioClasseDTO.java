@@ -12,6 +12,7 @@ public class RelatorioClasseDTO {
     private Integer totalChamadas;
     private Integer mediaPresencas;
     private Integer mediaFaltas;
+    private Integer totalAusentes;
     private Double percentualPresenca;
     private Integer totalBiblias;
     private Integer totalRevistas;
@@ -82,6 +83,14 @@ public class RelatorioClasseDTO {
 
     public void setMediaFaltas(Integer mediaFaltas) {
         this.mediaFaltas = mediaFaltas;
+    }
+
+    public Integer getTotalAusentes() {
+        return totalAusentes;
+    }
+
+    public void setTotalAusentes(Integer totalAusentes) {
+        this.totalAusentes = totalAusentes;
     }
 
     public Double getPercentualPresenca() {

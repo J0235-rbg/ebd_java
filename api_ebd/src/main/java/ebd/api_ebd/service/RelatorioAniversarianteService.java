@@ -8,56 +8,99 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import ebd.api_ebd.domain.entity.AlunoDependente;
+import ebd.api_ebd.domain.entity.AlunoResponsavel;
+import ebd.api_ebd.domain.entity.Classe;
 import ebd.api_ebd.domain.entity.Congregacao;
-import ebd.api_ebd.domain.entity.Pessoa;
+import ebd.api_ebd.dto.relatorio.AlunoInfo;
 import ebd.api_ebd.dto.relatorio.AniversarianteDTO;
+import ebd.api_ebd.repository.AlunoDependenteRepository;
+import ebd.api_ebd.repository.AlunoResponsavelRepository;
+import ebd.api_ebd.repository.ClasseRepository;
 import ebd.api_ebd.repository.CongregacaoRepository;
-import ebd.api_ebd.repository.PessoaRepository;
 
 @Service
 public class RelatorioAniversarianteService {
 
-    private final PessoaRepository pessoaRepository;
+    private final AlunoDependenteRepository alunoDependenteRepository;
+    private final AlunoResponsavelRepository alunoResponsavelRepository;
     private final CongregacaoRepository congregacaoRepository;
+    private final ClasseRepository classeRepository;
 
     public RelatorioAniversarianteService(
-            PessoaRepository pessoaRepository,
-            CongregacaoRepository congregacaoRepository) {
-        this.pessoaRepository = pessoaRepository;
+            AlunoDependenteRepository alunoDependenteRepository,
+            AlunoResponsavelRepository alunoResponsavelRepository,
+            CongregacaoRepository congregacaoRepository,
+            ClasseRepository classeRepository) {
+        this.alunoDependenteRepository = alunoDependenteRepository;
+        this.alunoResponsavelRepository = alunoResponsavelRepository;
         this.congregacaoRepository = congregacaoRepository;
+        this.classeRepository = classeRepository;
     }
 
     public List<AniversarianteDTO> listarAniversariantesDoMes(Integer mes, Integer congregacaoId) {
-        List<Pessoa> pessoas;
+        List<AlunoInfo> alunos = new ArrayList<>();
         
         if (congregacaoId != null) {
-            pessoas = pessoaRepository.findByCongregacao(congregacaoId);
+            // Busca dependentes da congregação
+            List<AlunoDependente> dependentes = alunoDependenteRepository.findByCongregacao(congregacaoId);
+            for (AlunoDependente d : dependentes) {
+                alunos.add(new AlunoInfo(d.getId(), d.getNome(), d.getCongregacao(), d.getClasse(), true));
+            }
+            
+            // Busca responsáveis da congregação
+            List<AlunoResponsavel> responsaveis = alunoResponsavelRepository.findByCongregacao(congregacaoId);
+            for (AlunoResponsavel r : responsaveis) {
+                alunos.add(new AlunoInfo(r.getId(), r.getNome(), r.getCongregacao(), r.getClasse(), false));
+            }
         } else {
-            pessoas = pessoaRepository.findAllAtivos();
+            // Busca todos ativos
+            List<AlunoDependente> dependentes = alunoDependenteRepository.findAllAtivos();
+            for (AlunoDependente d : dependentes) {
+                alunos.add(new AlunoInfo(d.getId(), d.getNome(), d.getCongregacao(), d.getClasse(), true));
+            }
+            
+            List<AlunoResponsavel> responsaveis = alunoResponsavelRepository.findAllAtivos();
+            for (AlunoResponsavel r : responsaveis) {
+                alunos.add(new AlunoInfo(r.getId(), r.getNome(), r.getCongregacao(), r.getClasse(), false));
+            }
         }
 
         List<AniversarianteDTO> aniversariantes = new ArrayList<>();
         LocalDate hoje = LocalDate.now();
 
-        for (Pessoa pessoa : pessoas) {
-            if (pessoa.getDt_nascimento() != null) {
-                int mesNascimento = pessoa.getDt_nascimento().getMonthValue();
+        for (AlunoInfo aluno : alunos) {
+            // Buscar data de nascimento
+            LocalDate dtNascimento = null;
+            if (aluno.isDependente()) {
+                AlunoDependente dep = alunoDependenteRepository.findById(aluno.getId()).orElse(null);
+                if (dep != null) dtNascimento = dep.getDt_nascimento();
+            } else {
+                AlunoResponsavel resp = alunoResponsavelRepository.findById(aluno.getId()).orElse(null);
+                if (resp != null) dtNascimento = resp.getDt_nascimento();
+            }
+            
+            if (dtNascimento != null) {
+                int mesNascimento = dtNascimento.getMonthValue();
                 
                 if (mesNascimento == mes) {
-                    int idade = Period.between(pessoa.getDt_nascimento(), hoje).getYears();
+                    int idade = Period.between(dtNascimento, hoje).getYears();
                     
-                    Congregacao congregacao = congregacaoRepository.findById(pessoa.getCongregacao())
+                    Congregacao congregacao = congregacaoRepository.findById(aluno.getCongregacao())
+                            .orElse(null);
+                    
+                    Classe classe = classeRepository.findById(aluno.getClasse())
                             .orElse(null);
 
                     AniversarianteDTO aniversariante = new AniversarianteDTO(
-                            pessoa.getId(),
-                            pessoa.getNome(),
-                            pessoa.getDt_nascimento(),
+                            aluno.getId(),
+                            aluno.getNome(),
+                            dtNascimento,
                             idade,
-                            pessoa.getTelefone(),
+                            null, // Alunos não têm telefone direto
                             congregacao != null ? congregacao.getNome() : "N/A",
-                            "N/A", // Classe será implementada quando houver relação aluno-classe
-                            pessoa.getDt_nascimento().getDayOfMonth(),
+                            classe != null ? classe.getNome() : "N/A",
+                            dtNascimento.getDayOfMonth(),
                             mesNascimento
                     );
                     
@@ -73,37 +116,67 @@ public class RelatorioAniversarianteService {
     }
 
     public List<AniversarianteDTO> listarAniversariantesDoDia(LocalDate data, Integer congregacaoId) {
-        List<Pessoa> pessoas;
+        List<AlunoInfo> alunos = new ArrayList<>();
         
         if (congregacaoId != null) {
-            pessoas = pessoaRepository.findByCongregacao(congregacaoId);
+            // Busca dependentes da congregação
+            List<AlunoDependente> dependentes = alunoDependenteRepository.findByCongregacao(congregacaoId);
+            for (AlunoDependente d : dependentes) {
+                alunos.add(new AlunoInfo(d.getId(), d.getNome(), d.getCongregacao(), d.getClasse(), true));
+            }
+            
+            // Busca responsáveis da congregação
+            List<AlunoResponsavel> responsaveis = alunoResponsavelRepository.findByCongregacao(congregacaoId);
+            for (AlunoResponsavel r : responsaveis) {
+                alunos.add(new AlunoInfo(r.getId(), r.getNome(), r.getCongregacao(), r.getClasse(), false));
+            }
         } else {
-            pessoas = pessoaRepository.findAllAtivos();
+            // Busca todos ativos
+            List<AlunoDependente> dependentes = alunoDependenteRepository.findAllAtivos();
+            for (AlunoDependente d : dependentes) {
+                alunos.add(new AlunoInfo(d.getId(), d.getNome(), d.getCongregacao(), d.getClasse(), true));
+            }
+            
+            List<AlunoResponsavel> responsaveis = alunoResponsavelRepository.findAllAtivos();
+            for (AlunoResponsavel r : responsaveis) {
+                alunos.add(new AlunoInfo(r.getId(), r.getNome(), r.getCongregacao(), r.getClasse(), false));
+            }
         }
 
         List<AniversarianteDTO> aniversariantes = new ArrayList<>();
         LocalDate hoje = LocalDate.now();
 
-        for (Pessoa pessoa : pessoas) {
-            if (pessoa.getDt_nascimento() != null) {
-                LocalDate nascimento = pessoa.getDt_nascimento();
-                
+        for (AlunoInfo aluno : alunos) {
+            // Buscar data de nascimento
+            LocalDate nascimento = null;
+            if (aluno.isDependente()) {
+                AlunoDependente dep = alunoDependenteRepository.findById(aluno.getId()).orElse(null);
+                if (dep != null) nascimento = dep.getDt_nascimento();
+            } else {
+                AlunoResponsavel resp = alunoResponsavelRepository.findById(aluno.getId()).orElse(null);
+                if (resp != null) nascimento = resp.getDt_nascimento();
+            }
+            
+            if (nascimento != null) {
                 if (nascimento.getDayOfMonth() == data.getDayOfMonth() &&
                     nascimento.getMonthValue() == data.getMonthValue()) {
                     
                     int idade = Period.between(nascimento, hoje).getYears();
                     
-                    Congregacao congregacao = congregacaoRepository.findById(pessoa.getCongregacao())
+                    Congregacao congregacao = congregacaoRepository.findById(aluno.getCongregacao())
+                            .orElse(null);
+                    
+                    Classe classe = classeRepository.findById(aluno.getClasse())
                             .orElse(null);
 
                     AniversarianteDTO aniversariante = new AniversarianteDTO(
-                            pessoa.getId(),
-                            pessoa.getNome(),
+                            aluno.getId(),
+                            aluno.getNome(),
                             nascimento,
                             idade,
-                            pessoa.getTelefone(),
+                            null,
                             congregacao != null ? congregacao.getNome() : "N/A",
-                            "N/A",
+                            classe != null ? classe.getNome() : "N/A",
                             nascimento.getDayOfMonth(),
                             nascimento.getMonthValue()
                     );
@@ -117,21 +190,49 @@ public class RelatorioAniversarianteService {
     }
 
     public List<AniversarianteDTO> listarProximosAniversariantes(Integer dias, Integer congregacaoId) {
-        List<Pessoa> pessoas;
+        List<AlunoInfo> alunos = new ArrayList<>();
         
         if (congregacaoId != null) {
-            pessoas = pessoaRepository.findByCongregacao(congregacaoId);
+            // Busca dependentes da congregação
+            List<AlunoDependente> dependentes = alunoDependenteRepository.findByCongregacao(congregacaoId);
+            for (AlunoDependente d : dependentes) {
+                alunos.add(new AlunoInfo(d.getId(), d.getNome(), d.getCongregacao(), d.getClasse(), true));
+            }
+            
+            // Busca responsáveis da congregação
+            List<AlunoResponsavel> responsaveis = alunoResponsavelRepository.findByCongregacao(congregacaoId);
+            for (AlunoResponsavel r : responsaveis) {
+                alunos.add(new AlunoInfo(r.getId(), r.getNome(), r.getCongregacao(), r.getClasse(), false));
+            }
         } else {
-            pessoas = pessoaRepository.findAllAtivos();
+            // Busca todos ativos
+            List<AlunoDependente> dependentes = alunoDependenteRepository.findAllAtivos();
+            for (AlunoDependente d : dependentes) {
+                alunos.add(new AlunoInfo(d.getId(), d.getNome(), d.getCongregacao(), d.getClasse(), true));
+            }
+            
+            List<AlunoResponsavel> responsaveis = alunoResponsavelRepository.findAllAtivos();
+            for (AlunoResponsavel r : responsaveis) {
+                alunos.add(new AlunoInfo(r.getId(), r.getNome(), r.getCongregacao(), r.getClasse(), false));
+            }
         }
 
         List<AniversarianteDTO> aniversariantes = new ArrayList<>();
         LocalDate hoje = LocalDate.now();
         LocalDate dataLimite = hoje.plusDays(dias);
 
-        for (Pessoa pessoa : pessoas) {
-            if (pessoa.getDt_nascimento() != null) {
-                LocalDate nascimento = pessoa.getDt_nascimento();
+        for (AlunoInfo aluno : alunos) {
+            // Buscar data de nascimento
+            LocalDate nascimento = null;
+            if (aluno.isDependente()) {
+                AlunoDependente dep = alunoDependenteRepository.findById(aluno.getId()).orElse(null);
+                if (dep != null) nascimento = dep.getDt_nascimento();
+            } else {
+                AlunoResponsavel resp = alunoResponsavelRepository.findById(aluno.getId()).orElse(null);
+                if (resp != null) nascimento = resp.getDt_nascimento();
+            }
+            
+            if (nascimento != null) {
                 LocalDate proximoAniversario = nascimento.withYear(hoje.getYear());
                 
                 // Se o aniversário já passou este ano, pegar do próximo ano
@@ -142,17 +243,20 @@ public class RelatorioAniversarianteService {
                 if (!proximoAniversario.isAfter(dataLimite)) {
                     int idade = Period.between(nascimento, hoje).getYears();
                     
-                    Congregacao congregacao = congregacaoRepository.findById(pessoa.getCongregacao())
+                    Congregacao congregacao = congregacaoRepository.findById(aluno.getCongregacao())
+                            .orElse(null);
+                    
+                    Classe classe = classeRepository.findById(aluno.getClasse())
                             .orElse(null);
 
                     AniversarianteDTO aniversariante = new AniversarianteDTO(
-                            pessoa.getId(),
-                            pessoa.getNome(),
+                            aluno.getId(),
+                            aluno.getNome(),
                             nascimento,
                             idade,
-                            pessoa.getTelefone(),
+                            null,
                             congregacao != null ? congregacao.getNome() : "N/A",
-                            "N/A",
+                            classe != null ? classe.getNome() : "N/A",
                             nascimento.getDayOfMonth(),
                             nascimento.getMonthValue()
                     );

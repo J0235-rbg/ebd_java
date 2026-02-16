@@ -9,6 +9,7 @@ public class RankingClasseDTO {
     private Integer pontuacao;
     private Integer totalAlunos;
     private Integer mediaPresencas;
+    private Integer totalAusentes;
     private Double percentualPresenca;
     private Integer totalBiblias;
     private Integer totalRevistas;
@@ -70,6 +71,14 @@ public class RankingClasseDTO {
 
     public void setMediaPresencas(Integer mediaPresencas) {
         this.mediaPresencas = mediaPresencas;
+    }
+
+    public Integer getTotalAusentes() {
+        return totalAusentes;
+    }
+
+    public void setTotalAusentes(Integer totalAusentes) {
+        this.totalAusentes = totalAusentes;
     }
 
     public Double getPercentualPresenca() {

@@ -44,12 +44,14 @@ public class RelatorioTrimestreService {
         List<RelatorioClasseDTO> relatoriosClasses = new ArrayList<>();
         int totalPresencas = 0;
         int totalAlunos = 0;
+        int totalAusentes = 0;
 
         for (Integer classeId : classesIds) {
             RelatorioClasseDTO relatorioClasse = relatorioClasseService.gerarRelatorioClasse(classeId, trimestreId);
             relatoriosClasses.add(relatorioClasse);
             totalPresencas += relatorioClasse.getMediaPresencas();
             totalAlunos += relatorioClasse.getTotalAlunos();
+            totalAusentes += relatorioClasse.getTotalAusentes() != null ? relatorioClasse.getTotalAusentes() : 0;
         }
 
         int mediaPresencas = !relatoriosClasses.isEmpty() 
@@ -73,6 +75,7 @@ public class RelatorioTrimestreService {
         relatorio.setTotalClasses(classesIds.size());
         relatorio.setTotalAlunos(totalAlunos);
         relatorio.setMediaPresencas(mediaPresencas);
+        relatorio.setTotalAusentes(totalAusentes);
         relatorio.setPercentualPresencaGeral(percentualPresencaGeral);
         relatorio.setClasses(relatoriosClasses);
 

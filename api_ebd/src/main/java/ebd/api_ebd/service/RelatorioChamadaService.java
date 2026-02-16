@@ -48,12 +48,12 @@ public class RelatorioChamadaService {
         List<RegistroChamada> registros = registroChamadaRepository.findByChamadaId(chamadaId);
 
         int presentes = (int) registros.stream()
-                .filter(r -> r.getStatus() == 1)
-                .count();
+            .filter(r -> r.getStatus() != null && r.getStatus() == 1)
+            .count();
 
         int ausentes = (int) registros.stream()
-                .filter(r -> r.getStatus() == 0)
-                .count();
+            .filter(r -> r.getStatus() != null && r.getStatus() == 2)
+            .count();
 
         // Buscar dados adicionais da chamada para obter visitantes
         ChamadaDadosAdicionais dadosAdicionais = dadosAdicionaisRepository
@@ -126,6 +126,11 @@ public class RelatorioChamadaService {
         } else {
             chamadas = chamadaRepository.findAll();
         }
+        
+        // Filtrar apenas chamadas abertas
+        chamadas = chamadas.stream()
+                .filter(c -> c.getStatus() != null && c.getStatus().name().equals("Aberto"))
+                .toList();
 
         List<RelatorioChamadaDTO> relatorios = new ArrayList<>();
         

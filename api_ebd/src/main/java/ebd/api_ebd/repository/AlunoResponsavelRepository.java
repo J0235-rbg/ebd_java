@@ -12,6 +12,9 @@ public interface AlunoResponsavelRepository extends JpaRepository<AlunoResponsav
     
     @Query("SELECT a FROM AlunoResponsavel a WHERE a.classe = :classeId")
     List<AlunoResponsavel> findByClasse(@Param("classeId") Integer classeId);
+
+    @Query("SELECT a FROM AlunoResponsavel a WHERE a.id = :alunoId AND a.classe = :classeId")
+    AlunoResponsavel findByIdAndClasse(@Param("alunoId") Integer alunoId, @Param("classeId") Integer classeId);
     
     @Query("SELECT a FROM AlunoResponsavel a WHERE a.congregacao = :congregacaoId")
     List<AlunoResponsavel> findByCongregacao(@Param("congregacaoId") Integer congregacaoId);

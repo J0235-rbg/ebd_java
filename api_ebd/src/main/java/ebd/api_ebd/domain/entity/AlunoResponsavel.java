@@ -1,5 +1,7 @@
 package ebd.api_ebd.domain.entity;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -31,6 +33,16 @@ public class AlunoResponsavel {
     private String observacao;
 
     private Integer status;
+
+    private LocalDate dt_nascimento;
+
+    public LocalDate getDt_nascimento() {
+        return dt_nascimento;
+    }
+
+    public void setDt_nascimento(LocalDate dt_nascimento) {
+        this.dt_nascimento = dt_nascimento;
+    }
 
     public Integer getId() {
         return id;
