@@ -53,6 +53,7 @@ public class ChamadaService {
                     .filter(c -> c.getData().equals(dataAlvo))
                     .toList();
         }
+        
 
         return Collections.emptyList();
     }
