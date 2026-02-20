@@ -1,5 +1,6 @@
 package ebd.api_ebd.dto.relatorio;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -13,6 +14,7 @@ public class RelatorioChamadaDTO {
     private Integer presentes;
     private Integer ausentes;
     private Integer visitantes;
+    private BigDecimal oferta;
     private Integer biblias;
     private Integer revistas;
 
@@ -54,6 +56,10 @@ public class RelatorioChamadaDTO {
         return revistas;
     }
 
+    public BigDecimal getOferta(){
+        return oferta;
+    }
+
     public List<RelatorioAlunoChamadaDTO> getAlunos() {
         return alunos;
     }
@@ -70,6 +76,7 @@ public class RelatorioChamadaDTO {
         Integer visitantes,
         Integer biblias,
         Integer revistas,
+        BigDecimal oferta,
         List<RelatorioAlunoChamadaDTO> alunos
     ) {
         this.chamadaId = chamadaId;
@@ -81,6 +88,7 @@ public class RelatorioChamadaDTO {
         this.visitantes = visitantes;
         this.biblias = biblias;
         this.revistas = revistas;
+        this.oferta = oferta;
         this.alunos = alunos;
     }
 
@@ -119,6 +127,10 @@ public class RelatorioChamadaDTO {
 
     public void setRevistas(Integer revistas) {
         this.revistas = revistas;
+    }
+
+    public void setOferta(BigDecimal oferta){
+        this.oferta = oferta;
     }
 
     public void setAlunos(List<RelatorioAlunoChamadaDTO> alunos) {

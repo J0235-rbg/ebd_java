@@ -4,12 +4,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ebd.api_ebd.domain.entity.Chamada;
+import ebd.api_ebd.dto.request.FechaChamadaRequest;
 import ebd.api_ebd.service.ChamadaService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -44,9 +47,16 @@ public class ChamadaController {
 
     @PutMapping("/{id}/fechar")
     @Operation(summary = "Fechar chamada", description = "Fecha uma chamada e consolida os dados")
-    public void fechar(@PathVariable Integer id) {
-        
-    chamadaService.fecharChamada(id);    
+    public ResponseEntity<String> fechar(
+        @PathVariable Integer id,
+        @RequestBody FechaChamadaRequest request
+    ) {
+        try{
+            chamadaService.fecharChamada(id, request);
+            return ResponseEntity.ok("Chamada fechada com sucesso");
+        } catch (Exception e){
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
     }
     
 }

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ebd.api_ebd.dto.relatorio.AniversarianteDTO;
 import ebd.api_ebd.dto.relatorio.RankingAlunoDTO;
 import ebd.api_ebd.dto.relatorio.RankingClasseDTO;
+import ebd.api_ebd.dto.relatorio.RankingIdadeGrupoDTO;
 import ebd.api_ebd.dto.relatorio.RelatorioAlunoDTO;
 import ebd.api_ebd.dto.relatorio.RelatorioChamadaDTO;
 import ebd.api_ebd.dto.relatorio.RelatorioClasseDTO;
@@ -21,6 +23,7 @@ import ebd.api_ebd.service.RelatorioAlunoService;
 import ebd.api_ebd.service.RelatorioAniversarianteService;
 import ebd.api_ebd.service.RelatorioChamadaService;
 import ebd.api_ebd.service.RelatorioClasseService;
+import ebd.api_ebd.service.RelatorioIdadeGrupoService;
 import ebd.api_ebd.service.RelatorioRankingService;
 import ebd.api_ebd.service.RelatorioTrimestreService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,6 +40,7 @@ public class RelatorioController {
     private final RelatorioTrimestreService relatorioTrimestreService;
     private final RelatorioAniversarianteService relatorioAniversarianteService;
     private final RelatorioRankingService relatorioRankingService;
+    private final RelatorioIdadeGrupoService relatorioIdadeGrupoService;
 
     public RelatorioController(
             RelatorioAlunoService relatorioAlunoService,
@@ -44,13 +48,15 @@ public class RelatorioController {
             RelatorioChamadaService relatorioChamadaService,
             RelatorioTrimestreService relatorioTrimestreService,
             RelatorioAniversarianteService relatorioAniversarianteService,
-            RelatorioRankingService relatorioRankingService) {
+            RelatorioRankingService relatorioRankingService,
+            RelatorioIdadeGrupoService relatorioIdadeGrupoService) {
         this.relatorioAlunoService = relatorioAlunoService;
         this.relatorioClasseService = relatorioClasseService;
         this.relatorioChamadaService = relatorioChamadaService;
         this.relatorioTrimestreService = relatorioTrimestreService;
         this.relatorioAniversarianteService = relatorioAniversarianteService;
         this.relatorioRankingService = relatorioRankingService;
+        this.relatorioIdadeGrupoService = relatorioIdadeGrupoService;
     }
 
     // ===== RELATÓRIOS DE ALUNOS =====
@@ -161,6 +167,30 @@ public class RelatorioController {
         return relatorioRankingService.gerarRankingAlunos(trimestreId, classeId, congregacaoId, limite);
     }
 
+    @GetMapping("/ranking/alunos/geral")
+    @Operation(summary = "Ranking geral de alunos", description = "Ranking unificado de dependentes e responsáveis")
+    public List<RankingAlunoDTO> rankingAlunosGeral(
+            @RequestParam(required = false) Integer trimestreId,
+            @RequestParam(required = false) Integer limite) {
+        return relatorioRankingService.rankingGeralUnificado(trimestreId, limite);
+    }
+
+    @GetMapping("/ranking/alunos/dependentes")
+    @Operation(summary = "Ranking de dependentes", description = "Ranking de alunos dependentes")
+    public List<RankingAlunoDTO> rankingDependentes(
+            @RequestParam(required = false) Integer trimestreId,
+            @RequestParam(required = false) Integer limite) {
+        return relatorioRankingService.rankingDependentes(trimestreId, limite);
+    }
+
+    @GetMapping("/ranking/alunos/responsaveis")
+    @Operation(summary = "Ranking de responsáveis", description = "Ranking de alunos responsáveis")
+    public List<RankingAlunoDTO> rankingResponsaveis(
+            @RequestParam(required = false) Integer trimestreId,
+            @RequestParam(required = false) Integer limite) {
+        return relatorioRankingService.rankingResponsaveis(trimestreId, limite);
+    }
+
     @GetMapping("/ranking/classes")
     @Operation(summary = "Ranking de classes", description = "Gera ranking de classes por pontuação")
     public List<RankingClasseDTO> rankingClasses(
@@ -184,6 +214,18 @@ public class RelatorioController {
             @RequestParam(required = false) Integer trimestreId,
             @RequestParam(defaultValue = "10") Integer limite) {
         return relatorioRankingService.gerarRankingClassesPorFrequencia(trimestreId, limite);
+    }
+
+    @GetMapping("/ranking/idade-grupos/trimestral")
+    @Operation(summary = "Ranking de alunos pela idade trimestral", description = "Ranking de alunos de acordo com a faixa etaria")
+    public ResponseEntity<List<RankingIdadeGrupoDTO>> getRankingPorGrupoTrimestral(@RequestParam Integer trimestreId){
+        return ResponseEntity.ok(relatorioIdadeGrupoService.gerarRankingPorIdadeGrupo(trimestreId));
+    }
+
+    @GetMapping("/ranking/idade-grupos/anual/{ano}")
+    @Operation(summary = "Ranking de alunos pela idade anual", description = "Ranking de alunos de acordo com a faixa etaria")
+    public List<RankingIdadeGrupoDTO> getRankingPorGrupoAnual(@PathVariable int ano) {
+        return relatorioIdadeGrupoService.gerarRankingAnualPorIdadeGrupo(ano);
     }
 }
 

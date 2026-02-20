@@ -1,7 +1,10 @@
 package ebd.api_ebd.service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
@@ -46,72 +49,55 @@ public class RelatorioChamadaService {
                 .orElseThrow(() -> new NotFoundException("Chamada não encontrada"));
 
         List<RegistroChamada> registros = registroChamadaRepository.findByChamadaId(chamadaId);
+        ChamadaDadosAdicionais dadosAdicionais = dadosAdicionaisRepository.findByChamadaId(chamadaId).orElse(null);
 
-        int presentes = (int) registros.stream()
-            .filter(r -> r.getStatus() != null && r.getStatus() == 1)
-            .count();
+        Map<Integer, String> mapaNomes = buscarMapaNomesCertoParaClasse(registros, chamada.getClasse());
 
-        int ausentes = (int) registros.stream()
-            .filter(r -> r.getStatus() != null && r.getStatus() == 2)
-            .count();
+    int presentes = (int) registros.stream().filter(r -> r.getStatus() != null && r.getStatus() == 1).count();
+    int ausentes = (int) registros.stream().filter(r -> r.getStatus() != null && r.getStatus() == 0).count();
+    int visitantes = (dadosAdicionais != null) ? dadosAdicionais.getVisitantes() : 0;
+    BigDecimal oferta = (dadosAdicionais != null) ? dadosAdicionais.getOferta() : BigDecimal.ZERO; 
+    int biblias = registros.stream().mapToInt(r -> r.getBiblia() != null ? r.getBiblia() : 0).sum();
+    int revistas = registros.stream().mapToInt(r -> r.getRevista() != null ? r.getRevista() : 0).sum();
 
-        // Buscar dados adicionais da chamada para obter visitantes
-        ChamadaDadosAdicionais dadosAdicionais = dadosAdicionaisRepository
-                .findByChamadaId(chamadaId)
-                .orElse(null);
+    List<RelatorioAlunoChamadaDTO> alunos = registros.stream().map(reg -> {
+        return new RelatorioAlunoChamadaDTO(
+            reg.getaluno(), 
+            mapaNomes.getOrDefault(reg.getaluno(), "Aluno não encontrado"), 
+            reg.getStatus(), 
+            reg.getBiblia(), 
+            reg.getRevista()
+        );
+    }).toList();
 
-        int visitantes = dadosAdicionais != null && dadosAdicionais.getVisitantes() != null 
-                ? dadosAdicionais.getVisitantes() 
-                : 0;
+    // Montagem do DTO (usando os seus setters)
+    RelatorioChamadaDTO relatorio = new RelatorioChamadaDTO();
+    relatorio.setChamadaId(chamada.getId());
+    relatorio.setData(chamada.getData());
+    relatorio.setClasseId(chamada.getClasse());
+    relatorio.setStatus(chamada.getStatus() != null ? chamada.getStatus().toString() : "N/A");
+    relatorio.setPresentes(presentes);
+    relatorio.setAusentes(ausentes);
+    relatorio.setVisitantes(visitantes);
+    relatorio.setOferta(oferta);
+    relatorio.setBiblias(biblias);
+    relatorio.setRevistas(revistas);
+    relatorio.setAlunos(alunos);
 
-        int biblias = registros.stream()
-                .mapToInt(r -> r.getBiblia() != null ? r.getBiblia() : 0)
-                .sum();
+    return relatorio;
+    }
 
-        int revistas = registros.stream()
-                .mapToInt(r -> r.getRevista() != null ? r.getRevista() : 0)
-                .sum();
+    private Map<Integer, String> buscarMapaNomesParaChamada(List<RegistroChamada> registros) {
+        List<Integer> idsAlunos = registros.stream().map(RegistroChamada::getaluno).toList();
+        Map<Integer, String> nomes = new HashMap<>();
 
-        // Buscar informações dos alunos
-        List<RelatorioAlunoChamadaDTO> alunos = new ArrayList<>();
-        for (RegistroChamada registro : registros) {
-            String nomeAluno = "N/A";
-            
-            // Tenta buscar como dependente
-            AlunoDependente dependente = alunoDependenteRepository.findById(registro.getaluno()).orElse(null);
-            if (dependente != null) {
-                nomeAluno = dependente.getNome();
-            } else {
-                // Se não for dependente, busca como responsável
-                AlunoResponsavel responsavel = alunoResponsavelRepository.findById(registro.getaluno()).orElse(null);
-                if (responsavel != null) {
-                    nomeAluno = responsavel.getNome();
-                }
-            }
-            
-            RelatorioAlunoChamadaDTO alunoDTO = new RelatorioAlunoChamadaDTO(
-                    registro.getaluno(),
-                    nomeAluno,
-                    registro.getStatus(),
-                    registro.getBiblia(),
-                    registro.getRevista()
-            );
-            alunos.add(alunoDTO);
-        }
-
-        RelatorioChamadaDTO relatorio = new RelatorioChamadaDTO();
-        relatorio.setChamadaId(chamada.getId());
-        relatorio.setData(chamada.getData());
-        relatorio.setClasseId(chamada.getClasse());
-        relatorio.setStatus(chamada.getStatus() != null ? chamada.getStatus().toString() : "N/A");
-        relatorio.setPresentes(presentes);
-        relatorio.setAusentes(ausentes);
-        relatorio.setVisitantes(visitantes);
-        relatorio.setBiblias(biblias);
-        relatorio.setRevistas(revistas);
-        relatorio.setAlunos(alunos);
-
-        return relatorio;
+        alunoDependenteRepository.findAllById(idsAlunos)
+            .forEach(d -> nomes.put(d.getId(), d.getNome()));
+        
+        alunoResponsavelRepository.findAllById(idsAlunos)
+            .forEach(r -> nomes.put(r.getId(), r.getNome()));
+        
+        return nomes;
     }
 
     public List<RelatorioChamadaDTO> listarRelatorioChamadas(Integer classeId, Integer trimestreId) {
@@ -140,5 +126,33 @@ public class RelatorioChamadaService {
         }
 
         return relatorios;
+    }
+
+    private Map<Integer, String> buscarMapaNomesCertoParaClasse(List<RegistroChamada> registros, Integer classeId) {
+    List<Integer> idsAlunos = registros.stream().map(RegistroChamada::getaluno).toList();
+    Map<Integer, String> nomes = new HashMap<>();
+
+    // Busca apenas dependentes que pertencem a esta classe
+    alunoDependenteRepository.findAllById(idsAlunos).stream()
+        .filter(d -> d.getClasse().equals(classeId))
+        .forEach(d -> nomes.put(d.getId(), d.getNome()));
+    
+    // Busca apenas responsáveis que pertencem a esta classe
+    alunoResponsavelRepository.findAllById(idsAlunos).stream()
+        .filter(r -> r.getClasse().equals(classeId))
+        .forEach(r -> nomes.put(r.getId(), r.getNome()));
+
+    // Caso algum aluno tenha sido transferido de classe mas o registro antigo ficou:
+    // Fazemos uma busca de segurança para IDs que ainda não foram encontrados no mapa
+    for (Integer id : idsAlunos) {
+        if (!nomes.containsKey(id)) {
+            alunoDependenteRepository.findById(id).ifPresent(d -> nomes.put(d.getId(), d.getNome()));
+            if (!nomes.containsKey(id)) {
+                alunoResponsavelRepository.findById(id).ifPresent(r -> nomes.put(r.getId(), r.getNome()));
+            }
+        }
+    }
+
+    return nomes;
     }
 }

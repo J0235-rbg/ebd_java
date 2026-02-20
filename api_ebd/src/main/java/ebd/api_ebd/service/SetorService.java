@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import ebd.api_ebd.domain.entity.Setor;
 import ebd.api_ebd.repository.SetorRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
 @Service

@@ -12,6 +12,7 @@ import ebd.api_ebd.domain.entity.Chamada;
 import ebd.api_ebd.domain.entity.Trim;
 import ebd.api_ebd.domain.enums.ChamadaStatus;
 import ebd.api_ebd.domain.enums.TrimestreStatus;
+import ebd.api_ebd.dto.request.FechaChamadaRequest;
 import ebd.api_ebd.repository.ChamadaRepository;
 import ebd.api_ebd.repository.TrimestreRepository;
 import jakarta.transaction.Transactional;
@@ -53,7 +54,7 @@ public class ChamadaService {
                     .filter(c -> c.getData().equals(dataAlvo))
                     .toList();
         }
-        
+
 
         return Collections.emptyList();
     }
@@ -89,7 +90,7 @@ public class ChamadaService {
         Chamada chamada = chamadaRepository.findById(chamadaId)
             .orElseThrow();
         
-        if(!"Aberto".equals(chamada.getStatus())){
+        if(chamada.getStatus() != ChamadaStatus.Aberto){
             throw new IllegalStateException("Chamada não está aberta");
         }
 
@@ -108,13 +109,13 @@ public class ChamadaService {
     }
 
     @Transactional
-    public void fecharChamada(Integer chamadaId, Integer responsavelId){
-        registroChamadaService.consolidarDados(chamadaId, responsavelId);
-
+    public void fecharChamada(Integer chamadaId, FechaChamadaRequest request){
+        
         Chamada chamada = chamadaRepository.findById(chamadaId)
-            .orElseThrow();
-
+        .orElseThrow();
+        
         chamada.setStatus(ChamadaStatus.Fechado);
         chamadaRepository.save(chamada);
+        registroChamadaService.consolidarDados(chamadaId, request.responsavelId(), request.visitantes(), request.oferta());
     }
 }

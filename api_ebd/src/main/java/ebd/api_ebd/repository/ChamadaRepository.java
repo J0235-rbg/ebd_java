@@ -55,6 +55,8 @@ public interface ChamadaRepository extends JpaRepository<Chamada, Integer> {
         @org.springframework.data.repository.query.Param("trimestreId") Integer trimestreId
     );
 
+    List<Chamada> findByTrimAndStatus(Integer trimestreId, ChamadaStatus stauts);
+
     List<Chamada> findByIgrejaAndTrimAndDataGreaterThanEqualAndStatusOrderByDataAsc(
         Integer igreja,
         Integer trim,

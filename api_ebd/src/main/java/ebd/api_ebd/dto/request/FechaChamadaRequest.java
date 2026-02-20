@@ -1,5 +1,11 @@
 package ebd.api_ebd.dto.request;
 
-public class FechaChamadaRequest {
+import java.math.BigDecimal;
+
+public record FechaChamadaRequest(
+    Integer responsavelId,
+    Integer visitantes,
+    BigDecimal oferta
+) {
     // Requisição para Fechar Atendimento
 }

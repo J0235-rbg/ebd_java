@@ -8,7 +8,7 @@ public class AniversarianteDTO {
     private String nome;
     private LocalDate dataNascimento;
     private Integer idade;
-    private String telefone;
+    private String tipo;
     private String congregacao;
     private String classe;
     private Integer diaAniversario;
@@ -17,13 +17,13 @@ public class AniversarianteDTO {
     public AniversarianteDTO() {}
 
     public AniversarianteDTO(Integer pessoaId, String nome, LocalDate dataNascimento, 
-                            Integer idade, String telefone, String congregacao, 
+                            Integer idade, String tipo, String congregacao, 
                             String classe, Integer diaAniversario, Integer mesAniversario) {
         this.pessoaId = pessoaId;
         this.nome = nome;
         this.dataNascimento = dataNascimento;
         this.idade = idade;
-        this.telefone = telefone;
+        this.tipo = tipo;
         this.congregacao = congregacao;
         this.classe = classe;
         this.diaAniversario = diaAniversario;
@@ -63,12 +63,12 @@ public class AniversarianteDTO {
         this.idade = idade;
     }
 
-    public String getTelefone() {
-        return telefone;
+    public String getTipo() {
+        return tipo;
     }
 
-    public void setTelefone(String telefone) {
-        this.telefone = telefone;
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
     }
 
     public String getCongregacao() {

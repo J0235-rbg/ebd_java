@@ -12,6 +12,7 @@ import ebd.api_ebd.domain.entity.Classe;
 import ebd.api_ebd.domain.entity.Congregacao;
 import ebd.api_ebd.domain.entity.Pessoa;
 import ebd.api_ebd.domain.entity.RegistroChamada;
+import ebd.api_ebd.domain.enums.ChamadaStatus;
 import ebd.api_ebd.dto.relatorio.RelatorioClasseDTO;
 import ebd.api_ebd.exception.NotFoundException;
 import ebd.api_ebd.repository.AlunoDependenteRepository;
@@ -56,13 +57,15 @@ public class RelatorioClasseService {
 
         List<Chamada> chamadas = chamadaRepository.findAll().stream()
                 .filter(c -> c.getClasse().equals(classeId))
+                .filter(c -> c.getStatus() == ChamadaStatus.Fechado)
                 .filter(c -> trimestreId == null || c.getTrim().equals(trimestreId))
                 .toList();
 
+                int totalChamadas = chamadas.size();
+
         List<RegistroChamada> todosRegistros = new ArrayList<>();
         for (Chamada chamada : chamadas) {
-            List<RegistroChamada> registros = registroChamadaRepository.findByChamadaId(chamada.getId());
-            todosRegistros.addAll(registros);
+            todosRegistros.addAll(registroChamadaRepository.findByChamadaId(chamada.getId()));
         }
 
         int totalPresencas = (int) todosRegistros.stream()
@@ -70,25 +73,40 @@ public class RelatorioClasseService {
             .count();
 
         int totalFaltas = (int) todosRegistros.stream()
-            .filter(r -> r.getStatus() != null && r.getStatus() == 2)
+            .filter(r -> r.getStatus() != null && r.getStatus() == 0)
             .count();
 
-        int totalChamadas = chamadas.size();
+        int totalBibliaSoma = todosRegistros.stream()
+                .mapToInt(r -> r.getBiblia() != null ? r.getBiblia() : 0).sum();
+        int totalRevistaSoma = todosRegistros.stream()
+                .mapToInt(r -> r.getRevista() != null ? r.getRevista() : 0).sum();
+
         int mediaPresencas = totalChamadas > 0 ? totalPresencas / totalChamadas : 0;
         int mediaFaltas = totalChamadas > 0 ? totalFaltas / totalChamadas : 0;
 
         // Calcular médias de bíblias e revistas por chamada
-        int mediaBiblias = totalChamadas > 0 
-            ? todosRegistros.stream().mapToInt(r -> r.getBiblia() != null ? r.getBiblia() : 0).sum() / totalChamadas
-            : 0;
+        int mediaBiblias = totalChamadas > 0 ? totalBibliaSoma / totalChamadas : 0;
+        int mediaRevistas = totalChamadas > 0 ? totalRevistaSoma / totalChamadas : 0;
 
-        int mediaRevistas = totalChamadas > 0 
-            ? todosRegistros.stream().mapToInt(r -> r.getRevista() != null ? r.getRevista() : 0).sum() / totalChamadas
-            : 0;
         
         double percentualPresenca = (totalPresencas + totalFaltas) > 0 
                 ? (totalPresencas * 100.0) / (totalPresencas + totalFaltas) 
                 : 0.0;
+                
+        // Contar alunos matriculados na classe (dependentes + responsáveis)
+        List<AlunoDependente> alunosDependentes = alunoDependenteRepository.findByClasse(classeId);
+        int totalDependentesAtivos = (int) alunosDependentes.stream()
+                .filter(a -> a.getStatus() != null && a.getStatus() == 1).count();
+        
+        List<AlunoResponsavel> alunosResponsaveis = alunoResponsavelRepository.findByClasse(classeId);
+        int totalResponsaveisAtivos = (int) alunosResponsaveis.stream()
+                .filter(a -> a.getStatus() != null && a.getStatus() == 1).count();
+        
+        int totalAlunos = totalDependentesAtivos + totalResponsaveisAtivos;
+        
+        RelatorioClasseDTO relatorio = new RelatorioClasseDTO();
+        relatorio.setClasseId(classe.getId());
+        relatorio.setNomeClasse(classe.getNome());
 
         // Buscar informações adicionais
         Congregacao congregacao = congregacaoRepository.findById(classe.getCongregacao())
@@ -98,32 +116,18 @@ public class RelatorioClasseService {
                 ? pessoaRepository.findById(classe.getProfessor1()).orElse(null)
                 : null;
 
-        // Contar alunos matriculados na classe (dependentes + responsáveis)
-        List<AlunoDependente> alunosDependentes = alunoDependenteRepository.findByClasse(classeId);
-        int totalDependentesAtivos = (int) alunosDependentes.stream()
-            .filter(a -> a.getStatus() != null && a.getStatus() == 1)
-            .count();
 
-        List<AlunoResponsavel> alunosResponsaveis = alunoResponsavelRepository.findByClasse(classeId);
-        int totalResponsaveisAtivos = (int) alunosResponsaveis.stream()
-            .filter(a -> a.getStatus() != null && a.getStatus() == 1)
-            .count();
-
-        int totalAlunos = totalDependentesAtivos + totalResponsaveisAtivos;
-
-        RelatorioClasseDTO relatorio = new RelatorioClasseDTO();
-        relatorio.setClasseId(classe.getId());
-        relatorio.setNomeClasse(classe.getNome());
         relatorio.setCongregacao(congregacao != null ? congregacao.getNome() : "N/A");
         relatorio.setProfessorPrincipal(professor != null ? professor.getNome() : "N/A");
+
         relatorio.setTotalAlunos(totalAlunos);
         relatorio.setTotalChamadas(totalChamadas);
         relatorio.setMediaPresencas(mediaPresencas);
         relatorio.setMediaFaltas(mediaFaltas);
         relatorio.setTotalAusentes(totalFaltas);
         relatorio.setPercentualPresenca(percentualPresenca);
-        relatorio.setTotalBiblias(mediaBiblias);
-        relatorio.setTotalRevistas(mediaRevistas);
+        relatorio.setTotalBiblias(totalBibliaSoma);
+        relatorio.setTotalRevistas(totalRevistaSoma);
 
         return relatorio;
     }

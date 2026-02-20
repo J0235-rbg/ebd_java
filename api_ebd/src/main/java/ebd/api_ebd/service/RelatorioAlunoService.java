@@ -1,11 +1,13 @@
 package ebd.api_ebd.service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -15,6 +17,7 @@ import ebd.api_ebd.domain.entity.Chamada;
 import ebd.api_ebd.domain.entity.Classe;
 import ebd.api_ebd.domain.entity.Congregacao;
 import ebd.api_ebd.domain.entity.RegistroChamada;
+import ebd.api_ebd.domain.enums.ChamadaStatus;
 import ebd.api_ebd.dto.relatorio.AlunoInfo;
 import ebd.api_ebd.dto.relatorio.RelatorioAlunoDTO;
 import ebd.api_ebd.exception.NotFoundException;
@@ -207,7 +210,7 @@ public class RelatorioAlunoService {
             .count();
 
         int totalFaltas = (int) registros.stream()
-            .filter(r -> r.getStatus() != null && r.getStatus() == 2) // 2 = ausente
+            .filter(r -> r.getStatus() != null && r.getStatus() == 0) // 2 = ausente
             .count();
 
         int totalChamadas = registros.size();
@@ -263,42 +266,83 @@ public class RelatorioAlunoService {
     }
 
     public List<RelatorioAlunoDTO> listarRelatoriosAlunos(Integer congregacaoId, Integer trimestreId, Integer classeId) {
-        List<AlunoInfo> alunos = new ArrayList<>();
-        
-        if (congregacaoId != null) {
-            // Busca dependentes da congregação
-            List<AlunoDependente> dependentes = alunoDependenteRepository.findByCongregacao(congregacaoId);
-            for (AlunoDependente d : dependentes) {
-                alunos.add(new AlunoInfo(d.getId(), d.getNome(), d.getCongregacao(), d.getClasse(), true));
-            }
-            
-            // Busca responsáveis da congregação
-            List<AlunoResponsavel> responsaveis = alunoResponsavelRepository.findByCongregacao(congregacaoId);
-            for (AlunoResponsavel r : responsaveis) {
-                alunos.add(new AlunoInfo(r.getId(), r.getNome(), r.getCongregacao(), r.getClasse(), false));
-            }
-        } else {
-            // Busca todos ativos
-            List<AlunoDependente> dependentes = alunoDependenteRepository.findAllAtivos();
-            for (AlunoDependente d : dependentes) {
-                alunos.add(new AlunoInfo(d.getId(), d.getNome(), d.getCongregacao(), d.getClasse(), true));
-            }
-            
-            List<AlunoResponsavel> responsaveis = alunoResponsavelRepository.findAllAtivos();
-            for (AlunoResponsavel r : responsaveis) {
-                alunos.add(new AlunoInfo(r.getId(), r.getNome(), r.getCongregacao(), r.getClasse(), false));
-            }
-        }
+        List<Chamada> chamadasTrimestre = chamadaRepository.findByTrimAndStatus(trimestreId, ChamadaStatus.Fechado);
+        List<Integer> idsChamadas = chamadasTrimestre.stream().map(Chamada::getId).toList();
+
+        if(idsChamadas.isEmpty()) return new ArrayList<>();
+
+        List<RegistroChamada> todosRegistros = registroChamadaRepository.findByChamadaIn(idsChamadas);
+        Map<Integer, List<RegistroChamada>> registrosPorAluno = todosRegistros.stream()
+            .collect(Collectors.groupingBy(RegistroChamada::getaluno));
+        Map<Integer, String> mapaClasses = carregarNomesClasses();
+        Map<Integer, String> mapaCongregacoes = carregarNomesCongregacoes();
+        List<AlunoCompletoInfo> alunos = buscarAlunosComDetalhes(congregacaoId, classeId);
 
         List<RelatorioAlunoDTO> relatorios = new ArrayList<>();
         
-        for (AlunoInfo aluno : alunos) {
-            if (classeId == null || aluno.getClasse().equals(classeId)) {
-                RelatorioAlunoDTO relatorio = gerarRelatorioAluno(aluno.getId(), trimestreId, classeId);
-                relatorios.add(relatorio);
-            }
+       for (AlunoCompletoInfo aluno : alunos) {
+        List<RegistroChamada> regsAluno = registrosPorAluno.getOrDefault(aluno.id(), new ArrayList<>());
+
+        // Cálculos
+        int presencas = (int) regsAluno.stream().filter(r -> r.getStatus() != null && r.getStatus() == 1).count();
+        int faltas = (int) regsAluno.stream().filter(r -> r.getStatus() != null && r.getStatus() == 0).count();
+        int biblias = regsAluno.stream().mapToInt(r -> r.getBiblia() != null ? r.getBiblia() : 0).sum();
+        int revistas = regsAluno.stream().mapToInt(r -> r.getRevista() != null ? r.getRevista() : 0).sum();
+
+        // Total de chamadas que a CLASSE dele teve no trimestre
+        int totalAulasClasse = (int) chamadasTrimestre.stream()
+                .filter(c -> c.getClasse().equals(aluno.classeId()))
+                .count();
+
+        double percentual = totalAulasClasse > 0 ? (presencas * 100.0) / totalAulasClasse : 0.0;
+
+        // 5. Chamada do construtor com os 12 parâmetros na ordem correta
+        relatorios.add(new RelatorioAlunoDTO(
+            aluno.id(),                                 // alunoId
+            aluno.nome(),                               // nome
+            aluno.dataNascimento(),                     // dataNascimento
+            aluno.telefone(),                           // telefone
+            mapaCongregacoes.getOrDefault(aluno.congregacaoId(), "N/A"), // congregacao
+            mapaClasses.getOrDefault(aluno.classeId(), "N/A"),          // classe
+            presencas,                                  // totalPresencas
+            faltas,                                     // totalFaltas
+            totalAulasClasse,                           // totalChamadas
+            percentual,                                 // percentualPresenca
+            biblias,                                    // biblias
+            revistas                                    // revistas
+        ));
         }
 
         return relatorios;
+    }
+
+    private List<AlunoCompletoInfo> buscarAlunosComDetalhes(Integer congregacaoId, Integer classeId) {
+    List<AlunoCompletoInfo> lista = new ArrayList<>();
+
+    alunoDependenteRepository.findAll().stream()
+        .filter(d -> d.getStatus() == 1)
+        .filter(d -> congregacaoId == null || d.getCongregacao().equals(congregacaoId))
+        .filter(d -> classeId == null || d.getClasse().equals(classeId))
+        .forEach(d -> lista.add(new AlunoCompletoInfo(d.getId(), d.getNome(), d.getDt_nascimento(), "Dependente", d.getClasse(), d.getCongregacao())));
+
+    alunoResponsavelRepository.findAll().stream()
+        .filter(r -> r.getStatus() == 1)
+        .filter(r -> congregacaoId == null || r.getCongregacao().equals(congregacaoId))
+        .filter(r -> classeId == null || r.getClasse().equals(classeId))
+        .forEach(r -> lista.add(new AlunoCompletoInfo(r.getId(), r.getNome(), r.getDt_nascimento(), "Responsável", r.getClasse(), r.getCongregacao())));
+
+    return lista;
+}
+
+// Record auxiliar para o transporte interno
+private record AlunoCompletoInfo(Integer id, String nome, LocalDate dataNascimento, String telefone, Integer classeId, Integer congregacaoId) {}
+
+    private Map<Integer, String> carregarNomesCongregacoes() {
+        return congregacaoRepository.findAll().stream()
+                .collect(Collectors.toMap(Congregacao::getId, Congregacao::getNome, (a, b) -> a));
+    }
+    private Map<Integer, String> carregarNomesClasses() {
+        return classeRepository.findAll().stream()
+                .collect(Collectors.toMap(Classe::getId, Classe::getNome));
     }
 }

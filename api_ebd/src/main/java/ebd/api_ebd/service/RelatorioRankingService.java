@@ -2,7 +2,10 @@ package ebd.api_ebd.service;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -12,6 +15,7 @@ import ebd.api_ebd.domain.entity.Chamada;
 import ebd.api_ebd.domain.entity.Classe;
 import ebd.api_ebd.domain.entity.Congregacao;
 import ebd.api_ebd.domain.entity.RegistroChamada;
+import ebd.api_ebd.domain.enums.ChamadaStatus;
 import ebd.api_ebd.dto.relatorio.AlunoInfo;
 import ebd.api_ebd.dto.relatorio.RankingAlunoDTO;
 import ebd.api_ebd.dto.relatorio.RankingClasseDTO;
@@ -50,50 +54,45 @@ public class RelatorioRankingService {
     public List<RankingAlunoDTO> gerarRankingAlunos(Integer trimestreId, Integer classeId, Integer congregacaoId, Integer limite) {
         List<AlunoInfo> alunos = new ArrayList<>();
         
-        if (congregacaoId != null) {
-            // Busca dependentes da congregação
-            List<AlunoDependente> dependentes = alunoDependenteRepository.findByCongregacao(congregacaoId);
-            for (AlunoDependente d : dependentes) {
-                alunos.add(new AlunoInfo(d.getId(), d.getNome(), d.getCongregacao(), d.getClasse(), true));
-            }
+       
+            // Busca dependentes filtrados
+            List<AlunoDependente> dependentes = alunoDependenteRepository.findAll().stream()
+                .filter(d -> (classeId == null || d.getClasse().equals(classeId)))
+                .filter(d -> (congregacaoId == null || d.getCongregacao().equals(congregacaoId)))
+                .filter(d -> d.getStatus() != null && d.getStatus() == 1)
+                .toList();
             
-            // Busca responsáveis da congregação
-            List<AlunoResponsavel> responsaveis = alunoResponsavelRepository.findByCongregacao(congregacaoId);
-            for (AlunoResponsavel r : responsaveis) {
-                alunos.add(new AlunoInfo(r.getId(), r.getNome(), r.getCongregacao(), r.getClasse(), false));
+            // Busca responsáveis filtrados
+            List<AlunoResponsavel> responsaveis = alunoResponsavelRepository.findAll().stream()
+                .filter(r -> (classeId == null || r.getClasse().equals(classeId)))
+                .filter(r -> (congregacaoId == null || r.getCongregacao().equals(congregacaoId)))
+                .filter(r -> r.getStatus() != null && r.getStatus() == 1)
+                .toList();
+        
+            for(AlunoDependente d : dependentes) alunos.add(new AlunoInfo(d.getId(), d.getNome(), d.getCongregacao(), d.getClasse(), true));
+            for(AlunoResponsavel r : responsaveis) alunos.add(new AlunoInfo(r.getId(), r.getNome(), r.getCongregacao(), r.getClasse(), false));
+
+            List<Integer> idsChamadaTrimestre = (trimestreId != null)
+                ? chamadaRepository.findByTrimestre(trimestreId).stream().map(Chamada::getId).toList()
+                : null;
+            String nomeClasse = "N/A";
+            if(classeId != null){
+                nomeClasse = classeRepository.findById(classeId).map(Classe::getNome).orElse("N/A");
             }
-        } else {
-            // Busca todos ativos
-            List<AlunoDependente> dependentes = alunoDependenteRepository.findAllAtivos();
-            for (AlunoDependente d : dependentes) {
-                alunos.add(new AlunoInfo(d.getId(), d.getNome(), d.getCongregacao(), d.getClasse(), true));
-            }
-            
-            List<AlunoResponsavel> responsaveis = alunoResponsavelRepository.findAllAtivos();
-            for (AlunoResponsavel r : responsaveis) {
-                alunos.add(new AlunoInfo(r.getId(), r.getNome(), r.getCongregacao(), r.getClasse(), false));
-            }
-        }
 
         List<RankingAlunoDTO> ranking = new ArrayList<>();
 
         for (AlunoInfo aluno : alunos) {
-            List<RegistroChamada> registros = registroChamadaRepository.findAll().stream()
-                    .filter(r -> r.getaluno().equals(aluno.getId()))
-                    .toList();
+            List<RegistroChamada> registros = registroChamadaRepository.findByAluno(aluno.getId());
 
-            // Filtrar por trimestre se especificado
-            if (trimestreId != null) {
-                List<Integer> chamadasDoTrimestre = chamadaRepository.findByTrimestre(trimestreId).stream()
-                        .map(Chamada::getId)
-                        .toList();
+            if(idsChamadaTrimestre != null){
                 registros = registros.stream()
-                        .filter(r -> chamadasDoTrimestre.contains(r.getChamada()))
-                        .toList();
+                    .filter(r -> idsChamadaTrimestre.contains(r.getChamada()))
+                    .toList();
             }
 
             int totalPresencas = (int) registros.stream()
-                    .filter(r -> r.getStatus() == 1)
+                    .filter(r -> r.getStatus() != null && r.getStatus() == 1)
                     .count();
 
             int biblias = registros.stream()
@@ -105,6 +104,7 @@ public class RelatorioRankingService {
                     .sum();
 
             int totalChamadas = registros.size();
+
             double percentualPresenca = totalChamadas > 0 
                     ? (totalPresencas * 100.0) / totalChamadas 
                     : 0.0;
@@ -116,7 +116,7 @@ public class RelatorioRankingService {
                     0, // Posição será definida depois
                     aluno.getId(),
                     aluno.getNome(),
-                    "N/A", // Classe
+                    nomeClasse, 
                     pontuacao,
                     totalPresencas,
                     biblias,
@@ -136,83 +136,73 @@ public class RelatorioRankingService {
         }
 
         // Limitar resultados se especificado
-        if (limite != null && limite > 0 && ranking.size() > limite) {
-            return ranking.subList(0, limite);
-        }
-
-        return ranking;
+        return (limite != null && limite > 0 && ranking.size() > limite) 
+           ? ranking.subList(0, limite) : ranking;
     }
 
     public List<RankingClasseDTO> gerarRankingClasses(Integer trimestreId, Integer congregacaoId, Integer limite) {
-        List<Classe> classes;
-        
-        if (congregacaoId != null) {
-            classes = classeRepository.findByCongregacao(congregacaoId);
-        } else {
-            classes = classeRepository.findAll();
-        }
+        List<Classe> classes = (congregacaoId != null)
+            ? classeRepository.findByCongregacao(congregacaoId)
+            : classeRepository.findAll();
 
         List<RankingClasseDTO> ranking = new ArrayList<>();
 
         for (Classe classe : classes) {
             List<Chamada> chamadas = chamadaRepository.findAll().stream()
                     .filter(c -> c.getClasse().equals(classe.getId()))
+                    .filter(c -> c.getStatus() == ChamadaStatus.Fechado)
                     .filter(c -> trimestreId == null || c.getTrim().equals(trimestreId))
                     .toList();
 
-            List<RegistroChamada> todosRegistros = new ArrayList<>();
-            for (Chamada chamada : chamadas) {
-                List<RegistroChamada> registros = registroChamadaRepository.findByChamadaId(chamada.getId());
-                todosRegistros.addAll(registros);
-            }
-
-            int totalPresencas = (int) todosRegistros.stream()
-                    .filter(r -> r.getStatus() == 1)
-                    .count();
-
-                int totalFaltas = (int) todosRegistros.stream()
-                    .filter(r -> r.getStatus() != null && r.getStatus() == 2)
-                    .count();
-
-            // Contar total de alunos matriculados na classe
-            List<AlunoDependente> alunosDependentes = alunoDependenteRepository.findByClasse(classe.getId());
-            List<AlunoResponsavel> alunosResponsaveis = alunoResponsavelRepository.findByClasse(classe.getId());
-            int totalAlunos = alunosDependentes.size() + alunosResponsaveis.size();
-
-            // Calcular médias por chamada ao invés de somas absolutas
             int totalChamadas = chamadas.size();
-            int mediaPresencas = totalChamadas > 0 ? totalPresencas / totalChamadas : 0;
-            
-            int mediaBiblias = totalChamadas > 0 
-                ? todosRegistros.stream().mapToInt(r -> r.getBiblia() != null ? r.getBiblia() : 0).sum() / totalChamadas
-                : 0;
+            if(totalChamadas == 0) continue;
 
-            int mediaRevistas = totalChamadas > 0 
-                ? todosRegistros.stream().mapToInt(r -> r.getRevista() != null ? r.getRevista() : 0).sum() / totalChamadas
-                : 0;
-            
-            double percentualPresenca = (totalPresencas + totalFaltas) > 0 
-                    ? (totalPresencas * 100.0) / (totalPresencas + totalFaltas) 
-                    : 0.0;
+            List<Integer> idsChamadas = chamadas.stream().map(Chamada::getId).toList();
+            List<RegistroChamada> registros = registroChamadaRepository.findByChamadaIn(idsChamadas);
 
+            long totalAtivos = alunoDependenteRepository.findByClasse(classe.getId()).stream()
+                    .filter(d -> d.getStatus() != null && d.getStatus() == 1)
+                    .count() +
+                    alunoResponsavelRepository.findByClasse(classe.getId()).stream()
+                    .filter(r -> r.getStatus() != null && r.getStatus() ==1)
+                    .count();
+            if(totalAtivos == 0) continue;
+
+            int totalPresencas = (int) registros.stream()
+                    .filter(r -> r.getStatus() != null && r.getStatus() == 1)
+                    .count();
+            int totalBiblias = registros.stream().mapToInt(r -> r.getBiblia() != null ? r.getBiblia() : 0).sum();
+            int totalRevistas = registros.stream().mapToInt(r -> r.getRevista() != null ? r.getRevista() : 0).sum();
+
+                                        
+
+            double mediaPresencas = (double) totalPresencas / totalChamadas;
+            double mediaBiblias = (double) totalBiblias / totalChamadas;
+            double mediaRevistas = (double) totalRevistas / totalChamadas;
+            double mediaAusentes = (double) totalAtivos- mediaPresencas;
+
+            double presencasPossiveis = (double) totalAtivos * totalChamadas;
+            double percentualPresenca = (totalPresencas * 100.0) / presencasPossiveis;
+
+            
+            int totalAusentes = (int) presencasPossiveis - totalPresencas;
             // Calcular pontuação: média de presenças + média de bíblias + média de revistas
-            int pontuacao = mediaPresencas + mediaBiblias + mediaRevistas;
+            double pontuacao = mediaPresencas + mediaBiblias + mediaRevistas;
 
-            Congregacao congregacao = congregacaoRepository.findById(classe.getCongregacao())
-                    .orElse(null);
 
             RankingClasseDTO rankingDTO = new RankingClasseDTO();
-            rankingDTO.setPosicao(0); // Será definida depois
             rankingDTO.setClasseId(classe.getId());
             rankingDTO.setNomeClasse(classe.getNome());
-            rankingDTO.setCongregacao(congregacao != null ? congregacao.getNome() : "N/A");
-            rankingDTO.setPontuacao(pontuacao);
-            rankingDTO.setTotalAlunos(totalAlunos);
-            rankingDTO.setMediaPresencas(mediaPresencas);
-            rankingDTO.setTotalAusentes(totalFaltas);
+            rankingDTO.setTotalAlunos((int) totalAtivos);
+            rankingDTO.setPontuacao((int) Math.round(pontuacao));
+            rankingDTO.setMediaPresencas((int) Math.round(mediaPresencas));
+            rankingDTO.setTotalAusentes((int) Math.round(mediaAusentes));
             rankingDTO.setPercentualPresenca(percentualPresenca);
-            rankingDTO.setTotalBiblias(mediaBiblias);
-            rankingDTO.setTotalRevistas(mediaRevistas);
+            rankingDTO.setTotalBiblias((int) Math.round(mediaBiblias));
+            rankingDTO.setTotalRevistas((int) Math.round(mediaRevistas));
+
+            congregacaoRepository.findById(classe.getCongregacao())
+                .ifPresent(cong -> rankingDTO.setCongregacao(cong.getNome()));
 
             ranking.add(rankingDTO);
         }
@@ -226,15 +216,132 @@ public class RelatorioRankingService {
         }
 
         // Limitar resultados se especificado
-        if (limite != null && limite > 0 && ranking.size() > limite) {
-            return ranking.subList(0, limite);
-        }
+         
+        
 
-        return ranking;
+        return (limite != null && limite > 0 && ranking.size() > limite) 
+            ? ranking.subList(0, limite) : ranking;
     }
 
+    public List<RankingAlunoDTO> rankingDependentes(Integer trimestreId, Integer limite) {
+        Map<Integer, String> nomesClasses = carregarNomesClasses();
+        List<AlunoInfoUnico> alunos = alunoDependenteRepository.findAll().stream()
+                .filter(d -> d.getStatus() != null && d.getStatus() == 1)
+            .map(d -> new AlunoInfoUnico(
+                d.getId(),
+                d.getNome(),
+                nomesClasses.getOrDefault(d.getClasse(), "N/A"),
+                d.getClasse()
+            ))
+                .toList();
+
+        return processarRanking(trimestreId, alunos, limite);
+    }
+
+    // RANKING PARA RESPONSÁVEIS
+    public List<RankingAlunoDTO> rankingResponsaveis(Integer trimestreId, Integer limite) {
+        Map<Integer, String> nomesClasses = carregarNomesClasses();
+        List<AlunoInfoUnico> alunos = alunoResponsavelRepository.findAll().stream()
+                .filter(r -> r.getStatus() != null && r.getStatus() == 1)
+            .map(r -> new AlunoInfoUnico(
+                r.getId(),
+                r.getNome(),
+                nomesClasses.getOrDefault(r.getClasse(), "N/A"),
+                r.getClasse()
+            ))
+                .toList();
+
+        return processarRanking(trimestreId, alunos, limite);
+    }
+    // Record auxiliar interno para facilitar o transporte de dados
+    private record AlunoInfoUnico(Integer id, String nome, String nomeClasse, Integer classeId) {}
+
+    private Map<Integer, String> carregarNomesClasses() {
+        return classeRepository.findAll().stream()
+                .collect(Collectors.toMap(Classe::getId, Classe::getNome));
+    }
+
+    private List<RankingAlunoDTO> processarRanking(Integer trimestreId, List<AlunoInfoUnico> alunos, Integer limite) {
+        // 1. Busca todas as chamadas FECHADAS do trimestre
+        List<Chamada> todasChamadasFechadas = chamadaRepository.findByTrimAndStatus(trimestreId, ChamadaStatus.Fechado);
+        
+        if (todasChamadasFechadas.isEmpty()) return new ArrayList<>();
+
+        List<RankingAlunoDTO> ranking = new ArrayList<>();
+
+        for (AlunoInfoUnico aluno : alunos) {
+            // 2. Filtra apenas as chamadas que pertencem à CLASSE deste aluno específico
+            List<Integer> idsChamadasClasse = todasChamadasFechadas.stream()
+                    .filter(c -> c.getClasse().equals(aluno.classeId()))
+                    .map(Chamada::getId)
+                    .toList();
+
+            if (idsChamadasClasse.isEmpty()) continue;
+
+            // 3. Busca os registros deste aluno APENAS para as chamadas da classe dele
+            List<RegistroChamada> registros = registroChamadaRepository.findByAluno(aluno.id()).stream()
+                    .filter(r -> idsChamadasClasse.contains(r.getChamada()))
+                    .toList();
+
+            int totalPresencas = (int) registros.stream()
+                    .filter(r -> r.getStatus() != null && r.getStatus() == 1)
+                    .count();
+
+            int biblias = registros.stream()
+                    .mapToInt(r -> r.getBiblia() != null ? r.getBiblia() : 0)
+                    .sum();
+
+            int revistas = registros.stream()
+                    .mapToInt(r -> r.getRevista() != null ? r.getRevista() : 0)
+                    .sum();
+
+            // CÁLCULO CORRETO: Percentual sobre as chamadas FECHADAS da CLASSE DELE
+            int totalChamadasClasse = idsChamadasClasse.size();
+            double percentualPresenca = (totalPresencas * 100.0) / totalChamadasClasse;
+
+            int pontuacao = totalPresencas + biblias + revistas;
+
+            ranking.add(new RankingAlunoDTO(
+                    0, aluno.id(), aluno.nome(), aluno.nomeClasse(), 
+                    pontuacao, totalPresencas, biblias, revistas, percentualPresenca
+            ));
+        }
+
+        // 4. Ordenação e Posição
+        ranking.sort(Comparator.comparing(RankingAlunoDTO::getPontuacao)
+                .thenComparing(RankingAlunoDTO::getPercentualPresenca).reversed());
+
+        for (int i = 0; i < ranking.size(); i++) {
+            ranking.get(i).setPosicao(i + 1);
+        }
+
+        return (limite != null && limite > 0 && ranking.size() > limite) 
+                ? ranking.subList(0, limite) : ranking;
+    }
+
+    public List<RankingAlunoDTO> rankingGeralUnificado(Integer trimestreId, Integer limite) {
+    // 1. Puxa os dois rankings separadamente (reutilizando a lógica que já existe)
+    // Passamos 'null' no limite aqui para pegar todos, e limitamos apenas na lista final unificada
+    List<RankingAlunoDTO> listaCompleta = new ArrayList<>();
+    listaCompleta.addAll(rankingDependentes(trimestreId, null));
+    listaCompleta.addAll(rankingResponsaveis(trimestreId, null));
+
+    listaCompleta.sort(Comparator.comparing(RankingAlunoDTO::getPontuacao)
+            .thenComparing(RankingAlunoDTO::getPercentualPresenca).reversed());
+    // 4. Recalcula a posição de cada um na lista nova (1º, 2º, 3º...)
+    for (int i = 0; i < listaCompleta.size(); i++) {
+        listaCompleta.get(i).setPosicao(i + 1);
+    }
+
+
+    return (limite != null && listaCompleta.size() > limite) ? listaCompleta.subList(0, limite) : listaCompleta;
+    }
+
+
+
+   
     public List<RankingAlunoDTO> gerarRankingAlunosPorFrequencia(Integer trimestreId, Integer limite) {
-        return gerarRankingAlunos(trimestreId, null, null, limite);
+        return rankingGeralUnificado(trimestreId, limite);
     }
 
     public List<RankingClasseDTO> gerarRankingClassesPorFrequencia(Integer trimestreId, Integer limite) {
