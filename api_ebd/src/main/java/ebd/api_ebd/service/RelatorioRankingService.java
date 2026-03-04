@@ -171,21 +171,18 @@ public class RelatorioRankingService {
             int totalPresencas = (int) registros.stream()
                     .filter(r -> r.getStatus() != null && r.getStatus() == 1)
                     .count();
+            int totalAusentes = (int) registros.stream()
+                    .filter(r -> r.getStatus() != null && r.getStatus() == 0)
+                    .count();
             int totalBiblias = registros.stream().mapToInt(r -> r.getBiblia() != null ? r.getBiblia() : 0).sum();
             int totalRevistas = registros.stream().mapToInt(r -> r.getRevista() != null ? r.getRevista() : 0).sum();
-
-                                        
 
             double mediaPresencas = (double) totalPresencas / totalChamadas;
             double mediaBiblias = (double) totalBiblias / totalChamadas;
             double mediaRevistas = (double) totalRevistas / totalChamadas;
-            double mediaAusentes = (double) totalAtivos- mediaPresencas;
 
             double presencasPossiveis = (double) totalAtivos * totalChamadas;
             double percentualPresenca = (totalPresencas * 100.0) / presencasPossiveis;
-
-            
-            int totalAusentes = (int) presencasPossiveis - totalPresencas;
             // Calcular pontuação: média de presenças + média de bíblias + média de revistas
             double pontuacao = mediaPresencas + mediaBiblias + mediaRevistas;
 
@@ -194,9 +191,8 @@ public class RelatorioRankingService {
             rankingDTO.setClasseId(classe.getId());
             rankingDTO.setNomeClasse(classe.getNome());
             rankingDTO.setTotalAlunos((int) totalAtivos);
-            rankingDTO.setPontuacao((int) Math.round(pontuacao));
             rankingDTO.setMediaPresencas((int) Math.round(mediaPresencas));
-            rankingDTO.setTotalAusentes((int) Math.round(mediaAusentes));
+            rankingDTO.setTotalAusentes(totalAusentes);
             rankingDTO.setPercentualPresenca(percentualPresenca);
             rankingDTO.setTotalBiblias((int) Math.round(mediaBiblias));
             rankingDTO.setTotalRevistas((int) Math.round(mediaRevistas));
@@ -207,8 +203,8 @@ public class RelatorioRankingService {
             ranking.add(rankingDTO);
         }
 
-        // Ordenar por pontuação (decrescente)
-        ranking.sort(Comparator.comparing(RankingClasseDTO::getPontuacao).reversed());
+        // Ordenar por frequência/percentual de presença (decrescente)
+        ranking.sort(Comparator.comparing(RankingClasseDTO::getPercentualPresenca).reversed());
 
         // Definir posições
         for (int i = 0; i < ranking.size(); i++) {

@@ -72,7 +72,25 @@ public class Pessoa {
     @Column(name = "id_igreja", nullable = false)
     private Integer igreja;
 
-    public Integer getIgreja() {
+    @Column(name = "id_aluno")
+    private Integer alunoId;
+
+    @Column(name = "id_classe")
+    private Integer classeId;
+
+    public Integer getClasseId() {
+		return classeId;
+	}
+	public void setClasseId(Integer classeId) {
+		this.classeId = classeId;
+	}
+	public Integer getAlunoId() {
+		return alunoId;
+	}
+	public void setAlunoId(Integer alunoId) {
+		this.alunoId = alunoId;
+	}
+	public Integer getIgreja() {
         return igreja;
     }
     public void setIgreja(Integer igreja) {

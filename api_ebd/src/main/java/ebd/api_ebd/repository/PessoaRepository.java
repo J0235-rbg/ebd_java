@@ -25,5 +25,7 @@ public interface PessoaRepository extends JpaRepository<Pessoa, Integer> {
     
     @Query("SELECT p FROM Pessoa p WHERE p.ativo = true")
     List<Pessoa> findAllAtivos();
+
+    List<Pessoa> findByClasseIdAndAtivoTrue(Integer classeId);
     
 }

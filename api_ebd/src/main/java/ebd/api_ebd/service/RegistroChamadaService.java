@@ -72,6 +72,8 @@ public class RegistroChamadaService {
         }
     }
 
+    
+
    
 
     public List<RegistroChamada> listarPorChamada(Integer chamadaId){
@@ -79,7 +81,7 @@ public class RegistroChamadaService {
     }
 
     @Transactional
-    public void consolidarDados(Integer chamadaId, Integer responsavelId, Integer visitantes, BigDecimal oferta ){
+    public void consolidarDados(Integer chamadaId,  Integer visitantes, BigDecimal oferta, Integer responsavelId ){
         Chamada chamada = chamadaRepository.findById(chamadaId)
             .orElseThrow(() -> new NotFoundException("Chamada não encontrada"));
         
@@ -93,13 +95,12 @@ public class RegistroChamadaService {
         int biblias = 0;
         int revistas = 0;
 
-        for(RegistroChamada r : registros){
-            switch (r.getStatus()) {
-                case 1 -> presentes++;
-                case 0 -> ausentes++;
-            }
-            biblias += (r.getBiblia() != null ? r.getBiblia() : 0);
-            revistas += (r.getRevista() != null ? r.getRevista() : 0);
+       for(RegistroChamada r : registros){
+        if (r.getStatus() != null && r.getStatus() == 1) presentes++;
+        else ausentes++;
+        
+        biblias += (r.getBiblia() != null ? r.getBiblia() : 0);
+        revistas += (r.getRevista() != null ? r.getRevista() : 0);
         }
         // 3. CALCULAR MATRICULADOS (Soma de dependentes e responsáveis ativos na classe)
         long totalDependentes = alunoDependenteRepository.findByClasse(classeId).stream()
@@ -113,7 +114,7 @@ public class RegistroChamadaService {
             dadosAdicionaisRepository.findByChamadaId(chamadaId)
                 .orElseGet(() -> {
                     ChamadaDadosAdicionais d = new ChamadaDadosAdicionais();
-                    d.setChamada(chamadaRepository.findById(chamadaId).orElseThrow());
+                    d.setChamada(chamadaId);
                     return d;
                 });
 
@@ -126,6 +127,7 @@ public class RegistroChamadaService {
             dados.setMatriculados(matriculadosAtivos);
             dados.setTotalPresenca(presentes + visitantes);
             dados.setResponsavel(responsavelId);
+
 
             dadosAdicionaisRepository.save(dados);
     }

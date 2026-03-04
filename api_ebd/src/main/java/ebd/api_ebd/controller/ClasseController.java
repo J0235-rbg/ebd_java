@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ebd.api_ebd.domain.entity.Classe;
+import ebd.api_ebd.domain.entity.Pessoa;
 import ebd.api_ebd.service.ClasseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -63,6 +64,12 @@ public class ClasseController {
     @GetMapping("/professor/{pessoaId}")
     public List<Classe> classeDoProfessor(@RequestParam Integer igrejaId, @PathVariable Integer pessoaId) {
         return classeService.listarDoProfessor(igrejaId, pessoaId);
+    }
+
+    @GetMapping("/{classeId}/professores")
+    @Operation(summary = "Listar professores de uma classe", description = "Retorna todos os professores cadastrados para uma classe específica")
+    public List<Pessoa> buscarProfessoresPorClasse(@PathVariable Integer classeId) {
+        return classeService.buscarProfessoresPorClasse(classeId);
     }
     
     

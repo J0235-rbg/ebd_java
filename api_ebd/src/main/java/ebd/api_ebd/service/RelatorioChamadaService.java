@@ -1,6 +1,7 @@
 package ebd.api_ebd.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,10 +16,13 @@ import ebd.api_ebd.domain.entity.ChamadaDadosAdicionais;
 import ebd.api_ebd.domain.entity.RegistroChamada;
 import ebd.api_ebd.dto.relatorio.RelatorioAlunoChamadaDTO;
 import ebd.api_ebd.dto.relatorio.RelatorioChamadaDTO;
+import ebd.api_ebd.dto.relatorio.RelatorioClasseChamadaDTO;
+import ebd.api_ebd.dto.relatorio.RelatorioGeralChamadaDTO;
 import ebd.api_ebd.exception.NotFoundException;
 import ebd.api_ebd.repository.AlunoDependenteRepository;
 import ebd.api_ebd.repository.AlunoResponsavelRepository;
 import ebd.api_ebd.repository.ChamadaRepository;
+import ebd.api_ebd.repository.ClasseRepository;
 import ebd.api_ebd.repository.DadosAdicionaisRepository;
 import ebd.api_ebd.repository.RegistroChamadaRepository;
 
@@ -30,18 +34,21 @@ public class RelatorioChamadaService {
     private final AlunoDependenteRepository alunoDependenteRepository;
     private final AlunoResponsavelRepository alunoResponsavelRepository;
     private final DadosAdicionaisRepository dadosAdicionaisRepository;
+    private final ClasseRepository classeRepository;
 
     public RelatorioChamadaService(
             ChamadaRepository chamadaRepository,
             RegistroChamadaRepository registroChamadaRepository,
             AlunoDependenteRepository alunoDependenteRepository,
             AlunoResponsavelRepository alunoResponsavelRepository,
-            DadosAdicionaisRepository dadosAdicionaisRepository) {
+            DadosAdicionaisRepository dadosAdicionaisRepository,
+            ClasseRepository classeRepository) {
         this.chamadaRepository = chamadaRepository;
         this.registroChamadaRepository = registroChamadaRepository;
         this.alunoDependenteRepository = alunoDependenteRepository;
         this.alunoResponsavelRepository = alunoResponsavelRepository;
         this.dadosAdicionaisRepository = dadosAdicionaisRepository;
+        this.classeRepository = classeRepository;
     }
 
     public RelatorioChamadaDTO gerarRelatorioChamada(Integer chamadaId) {
@@ -154,5 +161,107 @@ public class RelatorioChamadaService {
     }
 
     return nomes;
+    }
+
+    public RelatorioGeralChamadaDTO gerarRelatorioGeralChamada(LocalDate dataDomingo) {
+        // Busca todas as chamadas do domingo
+        List<Chamada> chamadasDoDia = chamadaRepository.findByData(dataDomingo);
+        
+        if (chamadasDoDia.isEmpty()) {
+            throw new NotFoundException("Nenhuma chamada encontrada para a data: " + dataDomingo);
+        }
+
+        // Inicializa totalizadores gerais
+        int totalMatriculados = 0;
+        int totalPresentes = 0;
+        int totalAusentes = 0;
+        int totalVisitantes = 0;
+        BigDecimal totalOferta = BigDecimal.ZERO;
+        int totalBiblias = 0;
+        int totalRevistas = 0;
+
+        // Lista para armazenar dados de cada classe
+        List<RelatorioClasseChamadaDTO> classesRelatorio = new ArrayList<>();
+
+        // Processa cada chamada do dia
+        for (Chamada chamada : chamadasDoDia) {
+            // Busca dados da classe
+            var classe = classeRepository.findById(chamada.getClasse())
+                    .orElseThrow(() -> new NotFoundException("Classe não encontrada"));
+
+            // Conta alunos matriculados (dependentes + responsáveis ativos)
+            int matriculadosDependentes = (int) alunoDependenteRepository.findByClasse(classe.getId()).stream()
+                    .filter(a -> a.getStatus() != null && a.getStatus() == 1).count();
+            
+            int matriculadosResponsaveis = (int) alunoResponsavelRepository.findByClasse(classe.getId()).stream()
+                    .filter(a -> a.getStatus() != null && a.getStatus() == 1).count();
+
+            int matriculados = matriculadosDependentes + matriculadosResponsaveis;
+            totalMatriculados += matriculados;
+
+            // Busca registros de presença
+            List<RegistroChamada> registros = registroChamadaRepository.findByChamadaId(chamada.getId());
+            
+            // Busca dados adicionais
+            ChamadaDadosAdicionais dadosAdicionais = dadosAdicionaisRepository.findByChamadaId(chamada.getId()).orElse(null);
+
+            // Conta presentes e ausentes
+            int presentes = (int) registros.stream().filter(r -> r.getStatus() != null && r.getStatus() == 1).count();
+            int ausentes = (int) registros.stream().filter(r -> r.getStatus() != null && r.getStatus() == 0).count();
+            
+            totalPresentes += presentes;
+            totalAusentes += ausentes;
+
+            // Soma visitantes
+            int visitantes = 0;
+            if (dadosAdicionais != null && dadosAdicionais.getVisitantes() != null) {
+                visitantes = dadosAdicionais.getVisitantes();
+                totalVisitantes += visitantes;
+            }
+
+            // Soma oferta
+            BigDecimal oferta = BigDecimal.ZERO;
+            if (dadosAdicionais != null && dadosAdicionais.getOferta() != null) {
+                oferta = dadosAdicionais.getOferta();
+                totalOferta = totalOferta.add(oferta);
+            }
+
+            // Soma bíblias e revistas
+            int biblias = registros.stream().mapToInt(r -> r.getBiblia() != null ? r.getBiblia() : 0).sum();
+            int revistas = registros.stream().mapToInt(r -> r.getRevista() != null ? r.getRevista() : 0).sum();
+            
+            totalBiblias += biblias;
+            totalRevistas += revistas;
+
+            // Cria DTO da classe com os dados agregados
+            RelatorioClasseChamadaDTO classeRelatorio = new RelatorioClasseChamadaDTO(
+                classe.getNome(),
+                matriculados,
+                ausentes,
+                presentes,
+                biblias,
+                revistas,
+                visitantes,
+                presentes,  // totalPresenca = presentes
+                oferta
+            );
+
+            classesRelatorio.add(classeRelatorio);
+        }
+
+        // Monta o DTO com detalhes por classe e totais gerais
+        RelatorioGeralChamadaDTO relatorioGeral = new RelatorioGeralChamadaDTO();
+        relatorioGeral.setData(dataDomingo);
+        relatorioGeral.setClasses(classesRelatorio);
+        relatorioGeral.setTotalMatriculados(totalMatriculados);
+        relatorioGeral.setTotalClasses(chamadasDoDia.size());
+        relatorioGeral.setTotalPresentes(totalPresentes);
+        relatorioGeral.setTotalAusentes(totalAusentes);
+        relatorioGeral.setTotalVisitantes(totalVisitantes);
+        relatorioGeral.setTotalOferta(totalOferta);
+        relatorioGeral.setTotalBiblias(totalBiblias);
+        relatorioGeral.setTotalRevistas(totalRevistas);
+
+        return relatorioGeral;
     }
 }

@@ -58,6 +58,20 @@ public class PessoaService {
         return pessoaRepository.save(pessoa);
     }
 
+    public Integer obterIdAlunoVinculado(Integer pessoaId){
+        return pessoaRepository.findById(pessoaId)
+            .map(Pessoa::getAlunoId)
+            .orElse(null);
+    }
+
+    public List<Pessoa> buscarPorClasse(Integer classeId){
+        List<Pessoa> pessoas = pessoaRepository.findByClasseIdAndAtivoTrue(classeId);
+        if(pessoas.isEmpty()){
+            System.out.println("Nenhum professor vinculado a classe");
+        }
+        return pessoas;
+    }
+
     public Pessoa buscarPorId(Integer id) {
         return pessoaRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Pessoa não encontrada"));

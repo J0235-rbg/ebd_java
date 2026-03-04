@@ -13,9 +13,8 @@ public class ChamadaDadosAdicionais {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "id_chamada", nullable = false, unique = true)
-    private Chamada chamada;
+    @Column(name = "id_chamada")
+    private Integer chamada;
 
     private BigDecimal oferta;
     private Integer visitantes;
@@ -37,11 +36,11 @@ public class ChamadaDadosAdicionais {
         this.id = id;
     }
 
-    public Chamada getChamada() {
+    public Integer getChamada() {
         return chamada;
     }
 
-    public void setChamada(Chamada chamada) {
+    public void setChamada(Integer chamada) {
         this.chamada = chamada;
     }
 

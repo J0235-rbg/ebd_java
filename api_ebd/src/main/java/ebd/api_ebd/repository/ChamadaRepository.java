@@ -55,6 +55,10 @@ public interface ChamadaRepository extends JpaRepository<Chamada, Integer> {
         @org.springframework.data.repository.query.Param("trimestreId") Integer trimestreId
     );
 
+    Optional<Chamada> findByClasseAndData(Integer classeId, LocalDate data);
+
+
+
     List<Chamada> findByTrimAndStatus(Integer trimestreId, ChamadaStatus stauts);
 
     List<Chamada> findByIgrejaAndTrimAndDataGreaterThanEqualAndStatusOrderByDataAsc(
@@ -63,4 +67,29 @@ public interface ChamadaRepository extends JpaRepository<Chamada, Integer> {
         LocalDate data,
         ChamadaStatus status
     );
+
+    List<Chamada> findByIgrejaAndTrimAndDataGreaterThanEqualOrderByDataAsc(
+        Integer igreja,
+        Integer trim,
+        LocalDate data
+    );
+
+    List<Chamada> findByIgrejaAndTrimAndClasseAndDataGreaterThanEqualAndStatusOrderByDataAsc(
+        Integer igreja,
+        Integer trim,
+        Integer classeId,
+        LocalDate data,
+        ChamadaStatus status
+    );
+
+    List<Chamada> findByIgrejaAndTrimAndDataAndStatus(
+        Integer igreja,
+        Integer trim,
+        LocalDate data,
+        ChamadaStatus status
+    );
+
+    @Query("SELECT c FROM Chamada c WHERE c.data = :data ORDER BY c.classe")
+    List<Chamada> findByData(@org.springframework.data.repository.query.Param("data") LocalDate data);
+    
 }

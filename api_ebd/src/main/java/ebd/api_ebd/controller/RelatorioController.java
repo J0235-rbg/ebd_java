@@ -18,6 +18,7 @@ import ebd.api_ebd.dto.relatorio.RankingIdadeGrupoDTO;
 import ebd.api_ebd.dto.relatorio.RelatorioAlunoDTO;
 import ebd.api_ebd.dto.relatorio.RelatorioChamadaDTO;
 import ebd.api_ebd.dto.relatorio.RelatorioClasseDTO;
+import ebd.api_ebd.dto.relatorio.RelatorioGeralChamadaDTO;
 import ebd.api_ebd.dto.relatorio.RelatorioTrimestreDTO;
 import ebd.api_ebd.service.RelatorioAlunoService;
 import ebd.api_ebd.service.RelatorioAniversarianteService;
@@ -111,6 +112,18 @@ public class RelatorioController {
             @RequestParam(required = false) Integer classeId,
             @RequestParam(required = false) Integer trimestreId) {
         return relatorioChamadaService.listarRelatorioChamadas(classeId, trimestreId);
+    }
+
+    @GetMapping("/chamadas/geral")
+    @Operation(summary = "Relatório geral de chamadas do dia", description = "Gera relatório consolidado de todas as classes para um domingo específico")
+    public ResponseEntity<RelatorioGeralChamadaDTO> relatorioGeralChamadas(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataDomingo) {
+        try {
+            RelatorioGeralChamadaDTO relatorio = relatorioChamadaService.gerarRelatorioGeralChamada(dataDomingo);
+            return ResponseEntity.ok(relatorio);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     // ===== RELATÓRIOS DE TRIMESTRES =====

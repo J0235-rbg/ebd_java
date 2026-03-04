@@ -29,4 +29,7 @@ public interface TrimestreRepository extends JpaRepository<Trim, Integer> {
 
     @Query("SELECT t FROM Trim t WHERE t.igreja = :igrejaId AND t.ano = :ano")
     List<Trim> findByIgrejaIdAndAno(@Param("igrejaId") Integer igrejaId, @Param("ano") Integer ano);
+
+    @Query("SELECT t FROM Trim t WHERE t.igreja = :igrejaId AND t.status = 'Aberto' ORDER BY t.dataInicio DESC")
+    List<Trim> findByIgrejaIdAtivos(@Param("igrejaId") Integer igrejaId);
 } 

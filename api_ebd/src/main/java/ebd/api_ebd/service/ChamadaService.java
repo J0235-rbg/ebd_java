@@ -2,6 +2,7 @@ package ebd.api_ebd.service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -35,13 +36,61 @@ public class ChamadaService {
         this.trimestreRepository = trimestreRepository;
     }
 
-    public List<Chamada> buscarChamadasDoDia(Integer igrejaId, Integer trimId){
+    public List<Chamada> buscarChamadasDoDiaAtivos(Integer igrejaId, Integer trimId){
 
         LocalDate hoje = LocalDate.now();
 
         List<Chamada> todasChamadas = 
             chamadaRepository
                 .findByIgrejaAndTrimAndDataGreaterThanEqualAndStatusOrderByDataAsc(igrejaId, trimId, hoje, ChamadaStatus.Aberto);
+            
+        Optional<LocalDate> primeiraDataDomingo = todasChamadas.stream()
+            .map(Chamada::getData)
+            .filter(data -> data.getDayOfWeek() == DayOfWeek.SUNDAY)
+            .findFirst();
+
+        if(primeiraDataDomingo.isPresent()){
+            LocalDate dataAlvo = primeiraDataDomingo.get();
+            return todasChamadas.stream()
+                    .filter(c -> c.getData().equals(dataAlvo))
+                    .toList();
+        }
+
+
+        return Collections.emptyList();
+    }
+
+    public List<Chamada> buscarChamadasDoDia(Integer igrejaId, Integer trimId){
+
+        LocalDate hoje = LocalDate.now();
+
+        List<Chamada> todasChamadas = 
+            chamadaRepository
+                .findByIgrejaAndTrimAndDataGreaterThanEqualOrderByDataAsc(igrejaId, trimId, hoje);
+            
+        Optional<LocalDate> primeiraDataDomingo = todasChamadas.stream()
+            .map(Chamada::getData)
+            .filter(data -> data.getDayOfWeek() == DayOfWeek.SUNDAY)
+            .findFirst();
+
+        if(primeiraDataDomingo.isPresent()){
+            LocalDate dataAlvo = primeiraDataDomingo.get();
+            return todasChamadas.stream()
+                    .filter(c -> c.getData().equals(dataAlvo))
+                    .toList();
+        }
+
+
+        return Collections.emptyList();
+    }
+
+    public List<Chamada> buscarChamadasDoDiaClasses(Integer igrejaId, Integer trimId, Integer classeId){
+
+        LocalDate hoje = LocalDate.now();
+
+        List<Chamada> todasChamadas = 
+            chamadaRepository
+                .findByIgrejaAndTrimAndClasseAndDataGreaterThanEqualAndStatusOrderByDataAsc(igrejaId, trimId, classeId, hoje, ChamadaStatus.Aberto);
             
         Optional<LocalDate> primeiraDataDomingo = todasChamadas.stream()
             .map(Chamada::getData)
@@ -116,6 +165,50 @@ public class ChamadaService {
         
         chamada.setStatus(ChamadaStatus.Fechado);
         chamadaRepository.save(chamada);
-        registroChamadaService.consolidarDados(chamadaId, request.responsavelId(), request.visitantes(), request.oferta());
+        registroChamadaService.consolidarDados(chamadaId, request.visitantes(), request.oferta(), request.responsavelId());
+    }
+
+    @Transactional
+    public int fecharChamadasDoDia(LocalDate dataDomingo, Integer igrejaId, Integer trimId) {
+        LocalDate proximoDomingo = calcularProximoDomingo(dataDomingo);
+
+        List<Chamada> chamadasDoDia = chamadaRepository
+            .findByIgrejaAndTrimAndDataAndStatus(igrejaId, trimId, proximoDomingo, ChamadaStatus.Aberto);
+        
+        if (chamadasDoDia.isEmpty()) {
+            throw new IllegalStateException("Nenhuma chamada aberta encontrada para o próximo domingo: " + proximoDomingo);
+        }
+
+        // Fecha todas as chamadas do dia
+        for (Chamada chamada : chamadasDoDia) {
+            chamada.setStatus(ChamadaStatus.Fechado);
+            chamadaRepository.save(chamada);
+        }
+
+        return chamadasDoDia.size();
+    }
+
+    @Transactional
+    public int abrirChamadasDoDia(LocalDate dataDomingo, Integer igrejaId, Integer trimId) {
+        LocalDate proximoDomingo = calcularProximoDomingo(dataDomingo);
+
+        List<Chamada> chamadasDoDia = chamadaRepository
+            .findByIgrejaAndTrimAndDataAndStatus(igrejaId, trimId, proximoDomingo, ChamadaStatus.Fechado);
+
+        if (chamadasDoDia.isEmpty()) {
+            throw new IllegalStateException("Nenhuma chamada fechada encontrada para o próximo domingo: " + proximoDomingo);
+        }
+
+        // Abre todas as chamadas do dia
+        for (Chamada chamada : chamadasDoDia) {
+            chamada.setStatus(ChamadaStatus.Aberto);
+            chamadaRepository.save(chamada);
+        }
+
+        return chamadasDoDia.size();
+    }
+
+    private LocalDate calcularProximoDomingo(LocalDate dataReferencia) {
+        return dataReferencia.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
     }
 }

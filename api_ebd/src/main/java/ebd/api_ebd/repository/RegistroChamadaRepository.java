@@ -1,6 +1,7 @@
 package ebd.api_ebd.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -27,6 +28,8 @@ public interface RegistroChamadaRepository extends JpaRepository<RegistroChamada
     );
 
     List<RegistroChamada> findByChamadaIn(List<Integer> chamadaIds);
+
+    Optional<RegistroChamada> findByChamadaAndAluno(Integer chamadaId, Integer alunoId);
 
     List<RegistroChamada> findByAluno(Integer alunoId);
 

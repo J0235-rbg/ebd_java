@@ -10,7 +10,7 @@ import ebd.api_ebd.domain.entity.ChamadaDadosAdicionais;
 
 public interface DadosAdicionaisRepository extends JpaRepository<ChamadaDadosAdicionais, Integer> {
 
-    @Query("SELECT d FROM ChamadaDadosAdicionais d WHERE d.chamada.id = :chamadaId")
+    @Query("SELECT d FROM ChamadaDadosAdicionais d WHERE d.chamada = :chamadaId")
     Optional<ChamadaDadosAdicionais> findByChamadaId(@Param("chamadaId") Integer chamadaId);
 
 }

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ebd.api_ebd.domain.entity.Pessoa;
 import ebd.api_ebd.dto.request.AtualizarPessoaRequest;
 import ebd.api_ebd.dto.request.CriarPessoaRequest;
+import ebd.api_ebd.dto.response.LoginResponse;
 import ebd.api_ebd.service.PessoaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -105,6 +106,12 @@ public class PessoaController {
         return pessoaService.listarPorCargo(cargoId);
     }
 
+    @GetMapping("/classe/{classeId}")
+    public ResponseEntity<List<Pessoa>> listarPorClasse(@PathVariable Integer classeId){
+        List<Pessoa> equipe = pessoaService.buscarPorClasse(classeId);
+        return ResponseEntity.ok(equipe);
+    }
+
     @GetMapping("/igreja")
     @Operation(summary = "Listar pessoas por igreja", description = "Lista todas as pessoas de uma igreja específica")
     public List<Pessoa> listarPorIgreja(@RequestParam Integer igrejaId) {
@@ -113,11 +120,12 @@ public class PessoaController {
 
     @PostMapping("/login")
     @Operation(summary = "Autenticar usuário", description = "Realiza o login de um usuário usando login e keyApp")
-    public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         Pessoa pessoa =  pessoaService.autenticar(loginRequest.getLogin(), loginRequest.getKeyApp());
 
         if(pessoa != null){
-            return ResponseEntity.ok("Bem vindo, "+ pessoa.getNome() +"! Login realizado");
+            LoginResponse res = new LoginResponse(pessoa.getNome(), pessoa.getIgreja(), pessoa.getId(),pessoa.getCargo(), pessoa.isAdmin(), pessoa.isPodeRelatorio());
+            return ResponseEntity.ok(res);
         }else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login ou chave de acesso inválidos");
         }

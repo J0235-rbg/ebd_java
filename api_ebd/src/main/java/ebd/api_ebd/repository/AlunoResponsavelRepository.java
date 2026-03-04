@@ -24,4 +24,7 @@ public interface AlunoResponsavelRepository extends JpaRepository<AlunoResponsav
     
     @Query("SELECT a FROM AlunoResponsavel a WHERE a.status = 1")
     List<AlunoResponsavel> findAllAtivos();
+
+    @Query("SELECT a FROM AlunoResponsavel a WHERE a.classe = :classeId AND a.status = 1 ORDER BY a.nome")
+    List<AlunoResponsavel> findByClasseAndAtivos(@Param("classeId") Integer classeId);
 }

@@ -125,4 +125,17 @@ public class TrimestreService {
         trim.setStatus(TrimestreStatus.Fechado);
         trimestreRepository.save(trim);
     }
+
+    public List<Trim> listarPorIgreja(Integer igrejaId) {
+        return trimestreRepository.findByIgrejaOrderByDataInicioDesc(igrejaId);
+    }
+
+    public List<Trim> listarAtivosPorIgreja(Integer igrejaId) {
+        return trimestreRepository.findByIgrejaIdAtivos(igrejaId);
+    }
+
+    public Trim buscarPorId(Integer id) {
+        return trimestreRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Trimestre não encontrado"));
+    }
 }
